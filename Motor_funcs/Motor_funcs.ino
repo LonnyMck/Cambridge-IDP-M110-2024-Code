@@ -73,7 +73,6 @@ int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject){ // direc
     Serial.println("Incorrect direction argument received");
   }
 
-  motorObject->run(RELEASE);
 
 
 
