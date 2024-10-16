@@ -33,6 +33,9 @@ void loop() {
   //Serial.println("Entered loop");
 
   runMotor(150, 1, Motor);
+  delay(5000);
+  runMotor(0, 1, Motor);
+  delay(5000);
 
 }
 
