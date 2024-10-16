@@ -13,6 +13,7 @@ Adafruit_DCMotor *Motor = AFMS.getMotor(2);
 //Adafruit_DCMotor *Motor2 = AFMS.getMotor(3);
 
 
+
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
   Serial.println("Motor func test");
@@ -28,33 +29,40 @@ void setup() {
 }
 
 void loop() {
-  uint8_t i;
 
-  //int runMotor(150,FORWARD, Motor, 0);
+  //Serial.println("Entered loop");
 
+  runMotor(150, 1, Motor);
 
 }
 
 
 
+///////////////////////////
+//Declaring functions
+///////////////////////////
 
-void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject, int duration){ // direction should be 1 for Forward, 0 for Backward. Speed should be an int between 0 and 255.
+
+
+int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject){ // direction should be 1 for Forward, 0 for Backward. Speed should be an int between 0 and 255.
+  
+  Serial.println("Running Motor.");
 
   if (speed == 0){
     motorObject->run(RELEASE);
-    Serial.print("Stopping \n");
+    Serial.println("Stopping");
   }
 
   else if (direction == 1){
     motorObject->setSpeed(speed);
     motorObject->run(FORWARD);
-    Serial.print("Moving forward at \n");
+    Serial.println("Moving forward at " + String(speed));
   } 
 
   else if (direction == 0){
     motorObject->setSpeed(speed);
     motorObject->run(BACKWARD);
-    Serial.print("Moving backward at \n");
+    Serial.println("Moving backward at " + String(speed));
   }
 
 
@@ -65,4 +73,7 @@ void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject, int dura
   motorObject->run(RELEASE);
 
 
+
 }
+
+
