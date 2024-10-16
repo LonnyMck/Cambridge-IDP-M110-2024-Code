@@ -38,23 +38,21 @@ void loop() {
 
 
 
+void runMotor(int speed, char direction, Adafruit_DCMotor motorObject, int duration){ // direction should be FORWARD, BACKWARD, or STOP. Speed should be an int between 0 and 255.
 
-
-void runMotor(int speed, direction, motorObject, int duration){ // direction should be FORWARD, BACKWARD, or STOP. Speed should be an int between 0 and 255.
-
-  if (direction == FORWARD){
+  if (direction == "FORWARD"){
     motorObject->setSpeed(speed)
     motorObject->run(FORWARD)
     Serial.print("Moving forward at \n");
   } 
 
-  else if (direction == BACKWARD){
+  else if (direction == "BACKWARD"){
     motorObject->setSpeed(speed)
     motorObject->run(BACKWARD)
     Serial.print("Moving backward at \n");
   }
 
-  else if (direction == STOP){
+  else if (direction == "STOP"){
     motorObject->run(RELEASE);
     Serial.print("Stopping \n");
   }
