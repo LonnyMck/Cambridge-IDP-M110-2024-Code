@@ -30,7 +30,7 @@ void setup() {
 void loop() {
   uint8_t i;
 
-  void runMotor(150,FORWARD, Motor, 0)
+  //int runMotor(150,FORWARD, Motor, 0);
 
 
 }
@@ -38,24 +38,25 @@ void loop() {
 
 
 
-void runMotor(int speed, char direction, Adafruit_DCMotor motorObject, int duration){ // direction should be FORWARD, BACKWARD, or STOP. Speed should be an int between 0 and 255.
+void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject, int duration){ // direction should be 1 for Forward, 0 for Backward. Speed should be an int between 0 and 255.
 
-  if (direction == "FORWARD"){
-    motorObject->setSpeed(speed)
-    motorObject->run(FORWARD)
-    Serial.print("Moving forward at \n");
-  } 
-
-  else if (direction == "BACKWARD"){
-    motorObject->setSpeed(speed)
-    motorObject->run(BACKWARD)
-    Serial.print("Moving backward at \n");
-  }
-
-  else if (direction == "STOP"){
+  if (speed == 0){
     motorObject->run(RELEASE);
     Serial.print("Stopping \n");
   }
+
+  else if (direction == 1){
+    motorObject->setSpeed(speed);
+    motorObject->run(FORWARD);
+    Serial.print("Moving forward at \n");
+  } 
+
+  else if (direction == 0){
+    motorObject->setSpeed(speed);
+    motorObject->run(BACKWARD);
+    Serial.print("Moving backward at \n");
+  }
+
 
   else {
     Serial.println("Incorrect direction argument received");
