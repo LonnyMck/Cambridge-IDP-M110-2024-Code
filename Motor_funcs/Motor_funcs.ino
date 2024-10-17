@@ -21,6 +21,9 @@ int servopos = 0; // variable to store the servo position
 bool running = true;
 char input;
 
+double speed;
+double duration;
+
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -34,7 +37,7 @@ void setup() {
 
   Serial.println("Motor Shield found.");
 
-  controlservo.attach(2); // attaches the servo on pin 9 to the servo object
+  controlservo.attach(2); // attaches the servo on pin 2 to the servo object
 
   runServo(0); //Check that the servo is homed
 
@@ -45,7 +48,7 @@ void loop() {
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
-  
+  /*
   runServo(100);
   runServo(200);
   runServo(100);
@@ -59,7 +62,9 @@ void loop() {
   runMotor(0, 1, Motor);
   runMotor(0, 1, Motor2);
   delay(1000);
+  */
 
+  runForwards(10);
 
   }}
 
@@ -68,6 +73,21 @@ void loop() {
 ///////////////////////////
 //Declaring functions
 ///////////////////////////
+
+int runForwards(int distance){  //Higher level function taht will require calibration. Robot moves forwards a certain distance in cm. 
+
+speed = 100;  //Work out best value through testing, or add as argument to func.
+duration = distance / (speed * 2 * PI * 3); //Need to measure wheels more exactly
+
+runMotor(speed, 1, Motor);
+runMotor(speed, 1, Motor2);
+
+delay(duration);
+
+runMotor(0, 1, Motor);
+runMotor(0, 1, Motor2);
+
+}
 
 
 
