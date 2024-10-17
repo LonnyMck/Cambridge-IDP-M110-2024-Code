@@ -3,6 +3,8 @@ Test for motors in chassis
 */
 
 #include <Adafruit_MotorShield.h>
+#include <Servo.h>
+
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -10,8 +12,14 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 // Select which 'port' M1, M2, M3 or M4. In this case, M1
 Adafruit_DCMotor *Motor = AFMS.getMotor(2);
 // You can also make another motor on port M2
-//Adafruit_DCMotor *Motor2 = AFMS.getMotor(3);
+Adafruit_DCMotor *Motor2 = AFMS.getMotor(3);
 
+
+Servo controlservo; // create servo object to control a servo
+int servopos = 0; // variable to store the servo position
+
+bool running = true;
+char input;
 
 
 void setup() {
@@ -26,18 +34,34 @@ void setup() {
 
   Serial.println("Motor Shield found.");
 
+  controlservo.attach(2); // attaches the servo on pin 9 to the servo object
+
+  runServo(0); //Check that the servo is homed
+
 }
 
 void loop() {
 
-  //Serial.println("Entered loop");
+  running = check_interrupt(); //Check for interrupt
+  if (running) {  //No interrupt has been detected
 
+  
+  runServo(100);
+  runServo(200);
+  runServo(100);
+  runServo(0);
+  
+
+  
   runMotor(150, 1, Motor);
-  delay(5000);
+  runMotor(150, 1, Motor2);
+  delay(1000);
   runMotor(0, 1, Motor);
-  delay(5000);
+  runMotor(0, 1, Motor2);
+  delay(1000);
 
-}
+
+  }}
 
 
 
@@ -49,7 +73,9 @@ void loop() {
 
 int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject){ // direction should be 1 for Forward, 0 for Backward. Speed should be an int between 0 and 255.
   
-  Serial.println("Running Motor.");
+  running = check_interrupt(); //Check for interrupt
+
+  Serial.println("Change in Motor");
 
   if (speed == 0){
     motorObject->run(RELEASE);
@@ -73,9 +99,33 @@ int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject){ // direc
     Serial.println("Incorrect direction argument received");
   }
 
+}
 
+int runServo(int newpos){ // sends servo to a specific position
 
+  running = check_interrupt(); //Check for interrupt
+
+  Serial.println("Servo moving to position " + String(newpos));
+  controlservo.write(newpos); 
+  servopos = newpos;
+  Serial.println("Servo pos = " + String(servopos));
+  delay(2000);
 
 }
 
 
+int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean. Will eventually be an Estop.
+
+  if(Serial.available()){ // Adds keyboard interrupt
+        input = Serial.read();
+      }
+    
+    if(input == 't'){
+     Serial.println("Interrupt");
+     runMotor(0, 1, Motor);
+     runMotor(0, 1, Motor2);
+     runServo(0);
+     while(1);  //Get stuck in an endless loop and doesn't execute any new code
+    }
+    return true;
+}
