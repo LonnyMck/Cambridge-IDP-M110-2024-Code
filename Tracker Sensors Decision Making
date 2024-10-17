@@ -1,0 +1,124 @@
+const int sensorPinLL = 13;    // make sure to put the wires to the correct pins on the arduino
+const int sensorPinL = 12;   
+const int sensorPinR = 11;   
+const int sensorPinRR = 10;   
+
+int sensorStateLL = 0;     
+int sensorStateL = 0;       
+int sensorStateR = 0;       
+int sensorStateRR = 0;       
+
+// Remove 'const' from counters, as they should change dynamically
+int central_counter4 = 0;
+int central_counter3LL = 0;
+int central_counter3RR = 0;
+
+void setup() {
+  Serial.begin(9600);      
+  pinMode(sensorPinLL, INPUT); 
+  pinMode(sensorPinL, INPUT); 
+  pinMode(sensorPinR, INPUT); 
+  pinMode(sensorPinRR, INPUT); 
+}
+
+bool DetectCross() {
+  sensorStateLL = digitalRead(sensorPinLL);
+  sensorStateL = digitalRead(sensorPinL);
+  sensorStateR = digitalRead(sensorPinR);
+  sensorStateRR = digitalRead(sensorPinRR);
+  
+  if ((sensorStateLL == HIGH) && (sensorStateL == HIGH) && (sensorStateR == HIGH) && (sensorStateRR == HIGH)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool DetectRightTurn() {
+  sensorStateRR = digitalRead(sensorPinRR);
+  sensorStateL = digitalRead(sensorPinL);
+  sensorStateR = digitalRead(sensorPinR);
+  
+  if ((sensorStateL == HIGH) && (sensorStateR == HIGH) && (sensorStateRR == HIGH)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool DetectLeftTurn() {
+  sensorStateLL = digitalRead(sensorPinLL);
+  sensorStateL = digitalRead(sensorPinL);
+  sensorStateR = digitalRead(sensorPinR);
+  
+  if ((sensorStateLL == HIGH) && (sensorStateL == HIGH) && (sensorStateR == HIGH)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool IAmOnLine() {
+  sensorStateLL = digitalRead(sensorPinLL);
+  sensorStateL = digitalRead(sensorPinL);
+  sensorStateR = digitalRead(sensorPinR);
+  sensorStateRR = digitalRead(sensorPinRR);
+  
+  if ((sensorStateLL == LOW) && (sensorStateL == HIGH) && (sensorStateR == HIGH) && (sensorStateRR == LOW)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool IAmLost() {
+  sensorStateLL = digitalRead(sensorPinLL);
+  sensorStateL = digitalRead(sensorPinL);
+  sensorStateR = digitalRead(sensorPinR);
+  sensorStateRR = digitalRead(sensorPinRR);
+  
+  if ((sensorStateLL == LOW) && (sensorStateL == LOW) && (sensorStateR == LOW) && (sensorStateRR == LOW)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+String MakeDecision() {
+  // Step 1: Check for a cross
+  if (DetectCross()) {
+    return "I am in a cross!";
+  }
+
+  // Step 2: Check for right or left turn
+  bool right = DetectRightTurn();
+  bool left = DetectLeftTurn();
+
+  if (right) {
+    return "I have to turn right";
+  }
+
+  if (left) {
+    return "I have to turn left";
+  }
+
+  // Step 3: Check if still on the line
+  if (IAmOnLine()) {
+    return "I have to go forward";
+  }
+
+  // Step 4: Check if lost
+  if (IAmLost()) {
+    return "I am lost";
+  }
+
+  // If none of the conditions match, return a default value
+  return "Undetermined state";
+}
+
+void loop() {
+  String decision = MakeDecision();  // Get decision from function
+  Serial.println(decision);          // Print the decision
+  
+  delay(1000); // Delay for 1 second before next decision
+}
