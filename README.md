@@ -2,3 +2,5 @@
  IDP project done in Cambridge University by group M110
 
  All files with prefix test_ are rough files that can be ignored
+
+ If we need more storage, the standard c++ library can be deleted
