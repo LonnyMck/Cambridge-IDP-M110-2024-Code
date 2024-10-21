@@ -30,8 +30,8 @@ void setup() {
   Motor1->setSpeed(150);
   Motor2->setSpeed(150);
 
-  Motor1->run(BACKWARD);
-  Motor2->run(BACKWARD);
+  Motor1->run(FORWARD);
+  Motor2->run(FORWARD);
 
   // turn on motor
   Motor1->run(RELEASE);
@@ -43,8 +43,8 @@ void loop() {
 
   Serial.print("moving forward");
 
-  Motor1->run(BACKWARD);
-  Motor2->run(BACKWARD);
+  Motor1->run(FORWARD);
+  Motor2->run(FORWARD);
   for (i=0; i<255; i++) {
     Motor1->setSpeed(i);
     Motor2->setSpeed(i);
@@ -58,8 +58,8 @@ void loop() {
 
   Serial.print("moving backward");
 
-  Motor1->run(FORWARD);
-  Motor2->run(FORWARD);
+  Motor1->run(BACKWARD);
+  Motor2->run(BACKWARD);
   for (i=0; i<255; i++) {
     Motor1->setSpeed(i);
     Motor2->setSpeed(i);
