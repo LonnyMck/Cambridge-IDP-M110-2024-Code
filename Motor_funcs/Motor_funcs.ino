@@ -10,9 +10,9 @@ Test for motors in chassis
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
 // Select which 'port' M1, M2, M3 or M4. In this case, M1
-Adafruit_DCMotor *Motor = AFMS.getMotor(2);
+Adafruit_DCMotor *Motor = AFMS.getMotor(3);
 // You can also make another motor on port M2
-Adafruit_DCMotor *Motor2 = AFMS.getMotor(3);
+Adafruit_DCMotor *Motor2 = AFMS.getMotor(2);
 
 
 Servo controlservo; // create servo object to control a servo
@@ -23,6 +23,7 @@ char input;
 
 double speed;
 double duration;
+double time;
 
 
 void setup() {
@@ -64,7 +65,11 @@ void loop() {
   delay(1000);
   */
 
-  runForwards(10);
+  runForwards(5000);
+  turnRight(90);
+
+  
+  
 
   }}
 
@@ -74,7 +79,7 @@ void loop() {
 //Declaring functions
 ///////////////////////////
 
-int runForwards(int time){  //Optional argument time. Set time = 0 unless needed.
+int runForwards(int time){  //Optional argument time in ms. Set time = 0 unless needed.
 
 speed = 100;  //Work out best value through testing, or add as argument to func.
 
@@ -83,8 +88,7 @@ runMotor(speed, 1, Motor2);
 
 if (time != 0){
   delay(time);
-  runMotor(0, 1, Motor);
-  runMotor(0, 1, Motor2);
+  stop();
   }
 }
 
@@ -97,9 +101,15 @@ int runBackwards(int time){  //Optional argument time. Set time = 0 unless neede
 
   if (time != 0){
     delay(time);
-    runMotor(0, 1, Motor);
-    runMotor(0, 1, Motor2);
+    stop();
     }
+}
+
+int stop(){  //Optional argument time. Set time = 0 unless needed.
+
+  runMotor(0, 1, Motor);
+  runMotor(0, 1, Motor2);
+
 }
 
 int turnRight(int degrees){ ///////////// Need to calibrate the time and speeds
@@ -111,22 +121,20 @@ int turnRight(int degrees){ ///////////// Need to calibrate the time and speeds
 
   delay(time);
 
-  runMotor(0, 1, Motor);  //Stop spinning
-  runMotor(0, 1, Motor2); 
+  stop();
 
 }
 
 int turnLeft(int degrees){ ///////////// Need to calibrate the time and speeds
 
-  time = 5000;  //This needs calibrating
+  time = (degrees/90) * 5000;  //This needs calibrating
 
   runMotor(50, 0, Motor);  //May need to switch these around
   runMotor(100, 1, Motor2); //Spins forwards
 
   delay(time);
 
-  runMotor(0, 1, Motor);  //Stop spinning
-  runMotor(0, 1, Motor2); 
+  stop();
 
 }
 
@@ -144,13 +152,13 @@ int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject){ // direc
 
   else if (direction == 1){
     motorObject->setSpeed(speed);
-    motorObject->run(FORWARD);
+    motorObject->run(BACKWARD);
     Serial.println("Moving forward at " + String(speed));
   } 
 
   else if (direction == 0){
     motorObject->setSpeed(speed);
-    motorObject->run(BACKWARD);
+    motorObject->run(FORWARD);
     Serial.println("Moving backward at " + String(speed));
   }
 
