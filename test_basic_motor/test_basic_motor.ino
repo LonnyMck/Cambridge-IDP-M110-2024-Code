@@ -1,4 +1,4 @@
-code for motor testing:
+
 /*
 Test for motors in chassis
 */
@@ -74,5 +74,5 @@ void loop() {
   Serial.print("tech");
   Motor1->run(RELEASE);
   Motor2->run(RELEASE);
-  delay(1000);
+  delay(1000);
 }
