@@ -74,21 +74,61 @@ void loop() {
 //Declaring functions
 ///////////////////////////
 
-int runForwards(int distance){  //Higher level function taht will require calibration. Robot moves forwards a certain distance in cm. 
+int runForwards(int time){  //Optional argument time. Set time = 0 unless needed.
 
 speed = 100;  //Work out best value through testing, or add as argument to func.
-duration = distance / (speed * 2 * PI * 3); //Need to measure wheels more exactly
 
 runMotor(speed, 1, Motor);
 runMotor(speed, 1, Motor2);
 
-delay(duration);
+if (time != 0){
+  delay(time);
+  runMotor(0, 1, Motor);
+  runMotor(0, 1, Motor2);
+  }
+}
 
-runMotor(0, 1, Motor);
-runMotor(0, 1, Motor2);
+int runBackwards(int time){  //Optional argument time. Set time = 0 unless needed.
+
+  speed = 100;  //Work out best value through testing, or add as argument to func.
+
+  runMotor(speed, 0, Motor);
+  runMotor(speed, 0, Motor2);
+
+  if (time != 0){
+    delay(time);
+    runMotor(0, 1, Motor);
+    runMotor(0, 1, Motor2);
+    }
+}
+
+int turnRight(int degrees){ ///////////// Need to calibrate the time and speeds
+
+  time = 5000;  //This needs calibrating
+
+  runMotor(100, 1, Motor);  //May need to switch these around
+  runMotor(50, 0, Motor2); //Spins backwards
+
+  delay(time);
+
+  runMotor(0, 1, Motor);  //Stop spinning
+  runMotor(0, 1, Motor2); 
 
 }
 
+int turnLeft(int degrees){ ///////////// Need to calibrate the time and speeds
+
+  time = 5000;  //This needs calibrating
+
+  runMotor(50, 0, Motor);  //May need to switch these around
+  runMotor(100, 1, Motor2); //Spins forwards
+
+  delay(time);
+
+  runMotor(0, 1, Motor);  //Stop spinning
+  runMotor(0, 1, Motor2); 
+
+}
 
 
 int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject){ // direction should be 1 for Forward, 0 for Backward. Speed should be an int between 0 and 255.
