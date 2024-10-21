@@ -49,18 +49,18 @@ void setup() {
 
 // Main loop
 void loop() {
-  String decision = MakeDecision();  // Get decision from sensors
+  int decision = MakeDecision();  // Get decision from sensors
 
   // Execute action based on the decision
-  if (decision == "I am in a cross!") {
+  if (decision == 1) {
     stop(); // Stop at a cross
-  } else if (decision == "I have to turn right") {
+  } else if (decision == 2) {
     turnRight(90); // Turn right
-  } else if (decision == "I have to turn left") {
+  } else if (decision == 3) {
     turnLeft(90); // Turn left
-  } else if (decision == "I have to go forward") {
+  } else if (decision == 4) {
     runForwards(1000); // Move forward for 1 second
-  } else if (decision == "I am lost") {
+  } else if (decision == 5) {
     stop(); // Stop if lost
   } else {
     stop(); // Default action is to stop
@@ -134,25 +134,25 @@ bool IAmLost() {
   }
 }
 
-String MakeDecision() {
+int MakeDecision() {
   if (DetectCross()) {
-    return "I am in a cross!";
+    return 1;
   }
 
   if (DetectRightTurn()) {
-    return "I have to turn right";
+    return 2;
   }
 
   if (DetectLeftTurn()) {
-    return "I have to turn left";
+    return 3;
   }
 
   if (IAmOnLine()) {
-    return "I have to go forward";
+    return 4;
   }
 
   if (IAmLost()) {
-    return "I am lost";
+    return 5;
   }
 
   return "Undetermined state";
@@ -211,11 +211,11 @@ int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject) {
     Serial.println("Stopping motor");
   } else if (direction == 1) {
     motorObject->setSpeed(speed);
-    motorObject->run(BACKWARD);
+    motorObject->run(FORWARD);
     Serial.println("Moving forward at speed " + String(speed));
   } else if (direction == 0) {
     motorObject->setSpeed(speed);
-    motorObject->run(FORWARD);
+    motorObject->run(BACKWARD);
     Serial.println("Moving backward at speed " + String(speed));
   } else {
     Serial.println("Incorrect direction argument received");

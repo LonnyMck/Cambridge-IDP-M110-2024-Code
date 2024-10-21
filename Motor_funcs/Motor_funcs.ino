@@ -65,7 +65,7 @@ void loop() {
   delay(1000);
   */
 
-  runForwards(5000);
+  runForwards(6000);
   turnRight(90);
 
   
@@ -114,7 +114,7 @@ int stop(){  //Optional argument time. Set time = 0 unless needed.
 
 int turnRight(int degrees){ ///////////// Need to calibrate the time and speeds
 
-  time = 5000;  //This needs calibrating
+  time = (degrees/90) * 4400;  //This needs calibrating
 
   runMotor(100, 1, Motor);  //May need to switch these around
   runMotor(50, 0, Motor2); //Spins backwards
@@ -127,7 +127,7 @@ int turnRight(int degrees){ ///////////// Need to calibrate the time and speeds
 
 int turnLeft(int degrees){ ///////////// Need to calibrate the time and speeds
 
-  time = (degrees/90) * 5000;  //This needs calibrating
+  time = (degrees/90) * 4400;  //This needs calibrating
 
   runMotor(50, 0, Motor);  //May need to switch these around
   runMotor(100, 1, Motor2); //Spins forwards
