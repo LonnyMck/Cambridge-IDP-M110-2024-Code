@@ -1,0 +1,19 @@
+void mini_sweep(){
+  static int mini_counter = 0;
+  if (mini_counter < 25)
+    rotate_left(50);
+  else{
+    rotate_right(50);
+    }
+  if (us_change < -200){
+    delay(50);  // Slightly overrotates as it will be detected on the edge and we want middle
+    state = HUNTING;
+    mini_counter = 0;
+  }else{
+    if(mini_counter == 75){
+      state = SWEEPING;
+      mini_counter = 0;
+    }
+  }
+  mini_counter ++;
+}

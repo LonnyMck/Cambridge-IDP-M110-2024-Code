@@ -1,0 +1,26 @@
+
+#include <Adafruit_MotorShield.h>
+
+// Create the motor shield object with the default I2C address
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+
+// the two motors
+Adafruit_DCMotor *wheel_left = AFMS.getMotor(1); //the left wheel
+Adafruit_DCMotor *wheel_right = AFMS.getMotor(2); // the right wheel
+
+int speed = 255;
+
+void setup() {
+  // Turn on motor
+  wheel_left->run(RELEASE);
+  wheel_right->run(RELEASE);
+
+}  
+void loop() {
+
+  wheel_left->run(FORWARD);
+  wheel_left->setSpeed(speed);
+  wheel_right->run(FORWARD);
+  wheel_right->setSpeed(speed*0.9);
+}
+
