@@ -49,7 +49,10 @@ void setup() {
 
 // Main loop
 void loop() {
+  bool state = IAmLost();
+  Serial.println("check");
   int decision = MakeDecision();  // Get decision from sensors
+
 
   // Execute action based on the decision
   if (decision == 1) {
@@ -129,8 +132,10 @@ bool IAmLost() {
 
   if ((sensorStateLL == LOW) && (sensorStateL == LOW) && (sensorStateR == LOW) && (sensorStateRR == LOW)) {
     return true;
+    Serial.println("NO LINES DETECTED");
   } else {
     return false;
+    Serial.println("line detected");
   }
 }
 
