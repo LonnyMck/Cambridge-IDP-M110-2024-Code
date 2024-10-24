@@ -17,9 +17,14 @@ int sensorStateRR = 0;
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *Motor = AFMS.getMotor(3);   // Left motor
 Adafruit_DCMotor *Motor2 = AFMS.getMotor(2);  // Right motor
-Servo controlservo; // Servo for turning or controlling something else
+Servo controlservo;                           // Servo for turning or controlling something else
 
-bool running = false; // Start with the robot not running
+unsigned long time_since_line;
+enum line_follow_state { VEER_LEFT,
+                         VEER_RIGHT,
+                         FORWARD_MOVE } last_line;
+
+bool running = false;  // Start with the robot not running
 
 double speed;
 double time;
@@ -34,18 +39,19 @@ int redButtonState = 0;
 
 // Setup function
 void setup() {
-  Serial.begin(9600);           // set up Serial library at 9600 bps
+  Serial.begin(9600);  // set up Serial library at 9600 bps
   Serial.println("Motor and sensor func test");
 
   if (!AFMS.begin()) {
     Serial.println("Could not find Motor Shield. Check wiring.");
-    while (1);
+    while (1)
+      ;
   }
 
   Serial.println("Motor Shield found.");
 
-  controlservo.attach(2); // attaches the servo on pin 2 to the servo object
-  runServo(0); // Check that the servo is homed
+  controlservo.attach(2);  // attaches the servo on pin 2 to the servo object
+  runServo(0);             // Check that the servo is homed
 
   // Initialize sensors as inputs
   pinMode(sensorPinLL, INPUT);
@@ -87,7 +93,7 @@ void loop() {
     // Perform line following
     lineFollow();
 
-    delay(10); // Small delay before next loop iteration
+    delay(10);  // Small delay before next loop iteration
   }
 }
 
@@ -103,7 +109,7 @@ void lineFollow() {
   if (DetectCross()) {
     Serial.println("Cross detected.");
     stopMotors();
-    delay(1000); // Pause at the cross
+    delay(1000);  // Pause at the cross
   } else if (DetectRightTurn()) {
     Serial.println("Right turn detected.");
     turnRight();
@@ -117,38 +123,46 @@ void lineFollow() {
     // Adjust motor speeds based on sensor readings
     if (sensorStateL == HIGH && sensorStateR == HIGH) {
       // Both central sensors ON, go straight
-      runMotor(100, 1, Motor);   // Left motor
-      runMotor(100, 1, Motor2);  // Right motor
+      runMotor(200, 1, Motor);   // Left motor
+      runMotor(200, 1, Motor2);  // Right motor
       Serial.println("Moving forward.");
-    }
-    else if (sensorStateL == HIGH && sensorStateR == LOW) {
-      // Left sensor ON, right sensor OFF -> turn slightly right
-      runMotor(120, 1, Motor);    // Left motor slower
-      runMotor(50, 1, Motor2);  // Right motor faster
-      Serial.println("Adjusting right.");
-    }
-    else if (sensorStateL == LOW && sensorStateR == HIGH) {
-      // Left sensor OFF, right sensor ON -> turn slightly left
-      runMotor(50, 1, Motor);   // Left motor faster
-      runMotor(120, 1, Motor2);   // Right motor slower
-      Serial.println("Adjusting left.");
-    }
-    else if (sensorStateLL == HIGH) {
+    } else if (sensorStateL == HIGH && sensorStateR == LOW) {
+      veerRight();
+      time_since_line = millis();
+
+    } else if (sensorStateL == LOW && sensorStateR == HIGH) {
+      veerLeft();
+      time_since_line = millis();
+
+    } else if (sensorStateLL == HIGH) {
       // Far left sensor ON, need to turn sharply right
-      runMotor(60, 1, Motor);    // Left motor slower
-      runMotor(120, 1, Motor2);  // Right motor faster
+      runMotor(80, 1, Motor);    // Left motor slower
+      runMotor(190, 1, Motor2);  // Right motor faster
       Serial.println("Sharp adjust right.");
-    }
-    else if (sensorStateRR == HIGH) {
+    } else if (sensorStateRR == HIGH) {
       // Far right sensor ON, need to turn sharply left
-      runMotor(120, 1, Motor);   // Left motor faster
-      runMotor(60, 1, Motor2);   // Right motor slower
+      runMotor(120, 1, Motor);  // Left motor faster
+      runMotor(60, 1, Motor2);  // Right motor slower
       Serial.println("Sharp adjust left.");
-    }
-    else {
+    } else {
       // All sensors OFF, stop or take appropriate action
-      stopMotors();
-      Serial.println("Line lost. Stopping motors.");
+      if (time_since_line - millis() > 5000) {
+        stopMotors();
+        Serial.println("Line lost. Stopping motors.");
+        
+        time_since_line = millis();
+        Serial.println("too much time");
+        
+        return;
+      }
+      if (last_line == VEER_RIGHT) {
+        veerRight();
+        Serial.println("Still veering");
+      }
+      if (last_line == VEER_LEFT) {
+        veerLeft();
+        Serial.println("Still veering");
+      }
     }
   }
 }
@@ -235,7 +249,7 @@ void turnRight() {
     if (sensorRRWasBlack && sensorStateRR == LOW) {
       // RR sensor transitions from black to white
       Serial.println("RR sensor transitioned from black to white.");
-      break; // Exit the loop
+      break;  // Exit the loop
     }
   }
 
@@ -275,13 +289,34 @@ void turnLeft() {
     if (sensorLLWasBlack && sensorStateLL == LOW) {
       // LL sensor transitions from black to white
       Serial.println("LL sensor transitioned from black to white.");
-      break; // Exit the loop
+      break;  // Exit the loop
     }
   }
+
+
 
   // Stop the motors after the turn is complete
   stopMotors();
   Serial.println("Left turn completed.");
+}
+
+
+//veer left
+
+void veerLeft() {
+  // Left sensor OFF, right sensor ON -> turn slightly left
+  runMotor(80, 1, Motor);    // Left motor faster
+  runMotor(190, 1, Motor2);  // Right motor slower
+  Serial.println("Adjusting left.");
+  last_line = VEER_LEFT;
+}
+
+void veerRight() {
+  // Left sensor ON, right sensor OFF -> turn slightly right
+  runMotor(190, 1, Motor);  // Left motor slower
+  runMotor(80, 1, Motor2);  // Right motor faster
+  Serial.println("Adjusting right.");
+  last_line = VEER_RIGHT;
 }
 
 void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject) {
@@ -305,4 +340,3 @@ void runServo(int newpos) {
   controlservo.write(newpos);
   delay(2000);
 }
-

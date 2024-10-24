@@ -14,6 +14,7 @@ unsigned long time_since_led;
 bool isMoving; 
 
 void setup() {
+  Serial.begin(9600);
   //set all LEDs to output
   pinMode(LED_BLUE, OUTPUT); 
   pinMode(LED_GREEN, OUTPUT); 
@@ -22,11 +23,11 @@ void setup() {
 }
 void loop() {
   isMoving = true;
-  ledMovement(isMoving);
+  ledMovement( isMoving );
 }
 
 
-bool ledMovement(isMoving){
+void ledMovement( bool isMoving){
 
   if ( !isMoving ){ //if the robot isn't moving, turn the blue pin OFF
     digitalWrite(LED_BLUE, LOW);
