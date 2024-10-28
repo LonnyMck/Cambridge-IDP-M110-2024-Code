@@ -38,9 +38,9 @@ void setup() {
 
   Serial.println("Motor Shield found.");
 
-  controlservo.attach(2); // attaches the servo on pin 2 to the servo object
+  controlservo.attach(3); // attaches the servo on pin 2 to the servo object
 
-  runServo(0); //Check that the servo is homed
+  runServo(100); //Check that the servo is homed
 
 }
 
@@ -49,14 +49,13 @@ void loop() {
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
-  /*
-  runServo(100);
-  runServo(200);
-  runServo(100);
-  runServo(0);
+  
+  engageGrabber();
+  delay(5000);
+  releaseGrabber();
   
 
-  
+  /*
   runMotor(150, 1, Motor);
   runMotor(150, 1, Motor2);
   delay(1000);
@@ -65,8 +64,6 @@ void loop() {
   delay(1000);
   */
 
-  runForwards(6000);
-  turnRight(90);
 
   
   
@@ -181,6 +178,18 @@ int runServo(int newpos){ // sends servo to a specific position
 
 }
 
+int engageGrabber(){
+
+  runServo(180);
+
+}
+
+
+int releaseGrabber(){
+
+  runServo(100);
+
+}
 
 int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean. Will eventually be an Estop.
 
@@ -192,7 +201,7 @@ int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean
      Serial.println("Interrupt");
      runMotor(0, 1, Motor);
      runMotor(0, 1, Motor2);
-     runServo(0);
+     runServo(100);
      while(1);  //Get stuck in an endless loop and doesn't execute any new code
     }
     return true;
