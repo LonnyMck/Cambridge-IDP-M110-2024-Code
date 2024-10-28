@@ -11,7 +11,11 @@ int LED_RED = 5;
 //time variable, time since last LED flash
 unsigned long time_since_led;
 
+//variable is on when robo is moving, off when it is still
 bool isMoving; 
+
+//after block is detected, switch var for if it is or isnt magnetic
+bool isMagnetic;
 
 void setup() {
   Serial.begin(9600);
@@ -23,11 +27,18 @@ void setup() {
 }
 void loop() {
   isMoving = true;
-  ledMovement( isMoving );
+  flashLedWhenMoving( isMoving );
+
+  isMagnetic = true;
+  shineLedBlockType( isMagnetic );
+
+  delay(2000);
+
+  turnLedsOff();
 }
 
 
-void ledMovement( bool isMoving){
+void flashWhenMoving( bool isMoving){
 
   if ( !isMoving ){ //if the robot isn't moving, turn the blue pin OFF
     digitalWrite(LED_BLUE, LOW);
@@ -44,3 +55,13 @@ void ledMovement( bool isMoving){
 
 }
 
+void shineLedBlockType( bool isMagnetic ){
+  if (isMagnetic){ 
+    digitalWrite(LED_RED, HIGH ); 
+  }else{
+    digitalWrite( LED_GREEN, HIGH );
+  }
+
+}
+
+void turnLedsOff(){}
