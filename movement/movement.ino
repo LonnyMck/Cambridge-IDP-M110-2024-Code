@@ -92,12 +92,27 @@ void flashWhenMoving( bool isMoving){
 
 
 void loop() {
-  // Check if the green button has been pressed
-  buttonState = digitalRead(greenButtonPin);
-
+  // Check if the red button has been pressed
   if (digitalRead(redButtonPin) == HIGH) {
     isHalted = true;
+<<<<<<< Updated upstream
     stop();  // Immediately stop all motors
+=======
+    isStarted = false;
+    stop(); // Immediately stop all motors
+>>>>>>> Stashed changes
+  }
+
+  // Check if the green button has been pressed to start
+  if (!isStarted) {
+    if (digitalRead(greenButtonPin) == HIGH) {
+      isStarted = true;
+      isHalted = false;
+      Serial.println("Button High");
+      delay(100); // Debounce delay
+    } else {
+      return; // Do nothing until the green button is pressed
+    }
   }
 
   // If halted, do nothing further
@@ -105,6 +120,7 @@ void loop() {
     return;  // Exit the loop early
   }
 
+<<<<<<< Updated upstream
   if (!isStarted) {
 
     if (buttonState == HIGH) {
@@ -117,8 +133,9 @@ void loop() {
     delay(100);
   }
 
+=======
+>>>>>>> Stashed changes
   if (isStarted) {
-
     if (!isStopped) {
       lineFollow(200);
       delay(300);
@@ -131,8 +148,12 @@ void loop() {
       hasTurned = true;  // Ensure makeTurnR is called only once
     }
   }
+<<<<<<< Updated upstream
   // Only run lineFollow if the robot is not stopped
+=======
+>>>>>>> Stashed changes
 }
+
 
 void lineFollow(int speed) {
 
