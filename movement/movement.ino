@@ -1,19 +1,20 @@
 #include <Adafruit_MotorShield.h>
 
 // Define sensor pins
-const int sensorPinLL = 10;
-const int sensorPinL = 11;
-const int sensorPinR = 12;
-const int sensorPinRR = 13;
+const int sensorPinLL = 13;
+const int sensorPinL = 12;
+const int sensorPinR = 11;
+const int sensorPinRR = 10;
 const int sensorPinB = 2;
 
 // Motor and servo control
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_DCMotor *MotorR = AFMS.getMotor(2);   // Right motor
-Adafruit_DCMotor *MotorL = AFMS.getMotor(3);   // Left motor
+Adafruit_DCMotor *MotorR = AFMS.getMotor(3);   // Right motor
+Adafruit_DCMotor *MotorL = AFMS.getMotor(2);   // Left motor
 
-bool isStopped = false; // Flag to track if the robot is stopped
-bool hasTurned = false; // Flag to ensure the turn happens only once
+bool isStopped = false;         // Flag to track if the robot is stopped
+bool hasTurned = false;         // Flag to ensure the turn happens only once
+bool lineFollowExecuted = false; // Flag to check if lineFollow has run at least once
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -40,53 +41,51 @@ void loop() {
     lineFollow();
     delay(300);
   }
-  // Run makeTurnR once after stopping
-  else if (!hasTurned) {
+  // Run makeTurnR once after stopping, but only if lineFollow has run
+  else if (lineFollowExecuted && !hasTurned) {
     makeTurnR();
     hasTurned = true; // Ensure makeTurnR is called only once
   }
 }
 
-// Function to read sensors and convert readings to a 5-digit binary number
-int getSensorBinary() {
-  int binaryNumber = 0;
-
-  // Read each sensor and shift the result to the correct position
-  binaryNumber |= (digitalRead(sensorPinLL) << 4);  // LL is the leftmost bit (4th position)
-  binaryNumber |= (digitalRead(sensorPinL) << 3);   // L is the 3rd position
-  binaryNumber |= (digitalRead(sensorPinR) << 2);   // R is the 2nd position
-  binaryNumber |= (digitalRead(sensorPinRR) << 1);  // RR is the 1st position
-  binaryNumber |= digitalRead(sensorPinB);          // B is the rightmost bit (0th position)
-
-  return binaryNumber;
-}
-
 void lineFollow() {
-  int sensorNumber = getSensorBinary();
+
   int speed = 200;
 
+  bool LL = digitalRead(sensorPinLL);
+  bool L = digitalRead(sensorPinL);
+  bool R = digitalRead(sensorPinR);
+  bool RR = digitalRead(sensorPinRR);
+  bool B = digitalRead(sensorPinB);
+  
+
   // Check conditions with binary literals
-  if (sensorNumber == 0b01101) {
+  if (L==HIGH && B==HIGH && R==HIGH) {
     runMotor(speed, 1, MotorR);
     runMotor(speed, 1, MotorL);
+    lineFollowExecuted = true;
   }
-  else if (sensorNumber == 0b01001) {
+  else if (L==HIGH && B==HIGH && R==LOW) {
     runMotor(speed + 50, 1, MotorR);
     runMotor(speed, 1, MotorL);
+    lineFollowExecuted = true;
   }
-  else if (sensorNumber == 0b00101) {
+  else if (L==LOW && B==HIGH && R==HIGH) {
     runMotor(speed, 1, MotorR);
     runMotor(speed + 50, 1, MotorL);
+    lineFollowExecuted = true;
   }
-  else if (sensorNumber == 0b01000) {
+  else if (L==HIGH && B==LOW && R==LOW) {
     runMotor(speed + 100, 1, MotorR);
     runMotor(speed, 1, MotorL);
+    lineFollowExecuted = true;
   }
-  else if (sensorNumber == 0b00100) {
+  else if (L==LOW && B==LOW && R==HIGH) {
     runMotor(speed, 1, MotorR);
     runMotor(speed + 100, 1, MotorL);
+    lineFollowExecuted = true;
   }
-  else if (sensorNumber == 0b01111 || sensorNumber == 0b11101 || sensorNumber == 0b11111 || sensorNumber == 0b00000) {
+  if (RR==HIGH || LL==HIGH) {
     runMotor(0, 1, MotorR);
     runMotor(0, 1, MotorL);
     isStopped = true; // Set the stop flag to true
@@ -96,10 +95,10 @@ void lineFollow() {
 void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject) {
   if (speed == 0) {
     motorObject->run(RELEASE);
-  } else if (direction == 0) {
+  } else if (direction == 1) {
     motorObject->setSpeed(speed);
     motorObject->run(FORWARD);
-  } else if (direction == 1) {
+  } else if (direction == 0) {
     motorObject->setSpeed(speed);
     motorObject->run(BACKWARD);
   } else {
@@ -111,28 +110,34 @@ void makeTurnR() {
   // Stop both motors initially
   runMotor(0, 0, MotorL);
   runMotor(0, 0, MotorR);
-  delay(1000);
+  delay(500);
 
-  // Move forward
   runMotor(200, 0, MotorL);
   runMotor(200, 0, MotorR);
-  delay(1000);
+  delay(500);
 
-  // Turn right
-  runMotor(200, 1, MotorL);
-  runMotor(0, 1, MotorR);
+
+  // Begin turning right
+  runMotor(200, 1, MotorL); // Left motor runs backward for right turn
+  runMotor(0, 1, MotorR);   // Right motor stopped
+
   delay(3000);
 
-  // Stop both motors after the turn
+  // Continue turning until sensorPinL goes HIGH again, aligning with the line
+  while (digitalRead(sensorPinL) == LOW) {
+    runMotor(200, 1, MotorL);
+    runMotor(0, 1, MotorR);
+  }
+
+  // Stop both motors after alignment
   runMotor(0, 0, MotorL);
   runMotor(0, 0, MotorR);
+  
+  // Reset flags to resume line following
+  isStopped = false;
+  hasTurned = false;
+  lineFollowExecuted = false;
 }
-
-
-
-
-
-
 
 
 
