@@ -10,7 +10,8 @@ Test for motors in chassis
 DFRobot_VL53L0X sensor;
 
 int SENSOR_MAG = 6;
-float BLOCK_CLOSE = 75;
+float BLOCK_NEARBY = 90;
+float BLOCK_CLOSE = 65;
 
 //LEDs are on pins 3, 4, and 5
 int LED_BLUE = 3;
@@ -19,6 +20,7 @@ int LED_RED = 5;
 
 //after block is detected, switch var for if it is or isnt magnetic
 bool isMagnetic;
+bool grabberEngaged;
 
 
 // Create the motor shield object with the default I2C address
@@ -40,8 +42,7 @@ double duration;
 double time;
 
 //for block sensing
-float block_distance;
-
+//float block_distance;
 
 
 void setup() {
@@ -72,7 +73,7 @@ void setup() {
 
   Serial.println("Motor Shield found.");
 
-  controlservo.attach(3); // attaches the servo on pin 2 to the servo object
+  controlservo.attach(3); // attaches the servo on pin 3 to the servo object
 
   releaseGrabber(); //Check that the servo is homed
 
@@ -80,24 +81,27 @@ void setup() {
 
 void loop() {
 
+  //releaseGrabber();
+
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
   runForwards(0);
+  checkMagnetic();
   CheckforObstacle();
-
 
   /*
   engageGrabber();
   delay(5000);
   releaseGrabber();
-  
+  */
 
   //runServo(0);
 
 
 
   /*
+
   runMotor(150, 1, Motor);
   runMotor(150, 1, Motor2);
   delay(1000);
@@ -206,14 +210,18 @@ int runServo(int newpos){ // sends servo to a specific position
 
 int engageGrabber(){
 
-  runServo(200);
+  Serial.println("Engaging grabber");
+  grabberEngaged = true;
+  runServo(100);
 
 }
 
 
 int releaseGrabber(){
 
-  runServo(120);
+  Serial.println("Releasing grabber");
+  grabberEngaged = false;
+  runServo(0);
 
 }
 
@@ -221,9 +229,13 @@ int releaseGrabber(){
 int CheckforObstacle(){
 
   //Get the distance
-  if (sensor.getDistance() < BLOCK_CLOSE){
+  if (sensor.getDistance() < BLOCK_CLOSE and grabberEngaged == false) {
     stopMotors();
     engageGrabber();
+  }
+
+    if (sensor.getDistance() < BLOCK_NEARBY){
+      //reduce speed?
   }
 
   Serial.print("Distance: ");
@@ -231,11 +243,21 @@ int CheckforObstacle(){
 
 }
 
+int checkMagnetic(){
+
+  isMagnetic = digitalRead(SENSOR_MAG);
+  Serial.print(", Magnetic: ");
+  Serial.println( digitalRead(SENSOR_MAG) );
+  shineLedBlockType( digitalRead(SENSOR_MAG) );
+
+}
 
 void shineLedBlockType( bool isMagnetic ){  //shine correct LED depending on if magnetic or non magnetic
   if (isMagnetic){ 
     digitalWrite(LED_RED, HIGH ); 
+    digitalWrite( LED_GREEN, LOW );
   }else{
+    digitalWrite(LED_RED, LOW ); 
     digitalWrite( LED_GREEN, HIGH );
   }
 
