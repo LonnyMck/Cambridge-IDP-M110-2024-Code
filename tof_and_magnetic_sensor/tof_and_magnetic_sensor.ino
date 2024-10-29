@@ -3,9 +3,17 @@
 #include "DFRobot_VL53L0X.h"
 DFRobot_VL53L0X sensor;
 
+//sensor mag consts
 float BLOCK_CLOSE = 75; //
-
 int SENSOR_MAG = 6;
+
+//LEDs are on pins 3, 4, and 5
+int LED_BLUE = 3;
+int LED_GREEN = 4;
+int LED_RED = 5;
+
+//after block is detected, switch var for if it is or isnt magnetic
+bool isMagnetic;
 
 void setup() {
   //initialize serial communication at 9600 bits per second:
@@ -21,15 +29,42 @@ void setup() {
 
 
   pinMode(SENSOR_MAG, INPUT); //sets magnetic to input
+
+    //set all LEDs to output
+  pinMode(LED_BLUE, OUTPUT); 
+  pinMode(LED_GREEN, OUTPUT); 
+  pinMode(LED_RED, OUTPUT); 
 }
 void loop() {
   //Get the distance
   Serial.print("Distance: ");
   Serial.print(sensor.getDistance());
 
+  isMagnetic = digitalRead(SENSOR_MAG);
   Serial.print(", Magnetic: ");
   Serial.println( digitalRead(SENSOR_MAG) );
-  //The delay is added to demonstrate the effect, and if you do not add the delay,
-  //it will not affect the measurement accuracy
+  shineLedBlockType( digitalRead(SENSOR_MAG) );
+  
+
   delay(500);
+}
+
+
+
+//shine correct LED depending on if magnetic or non magnetic
+
+void shineLedBlockType( bool isMagnetic ){
+  if (isMagnetic){ 
+    digitalWrite(LED_RED, HIGH ); 
+  }else{
+    digitalWrite( LED_GREEN, HIGH );
+  }
+
+}
+
+//turns all LEDs off
+void turnLedsOff(){
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_BLUE, LOW);
+  digitalWrite(LED_GREEN, LOW);
 }
