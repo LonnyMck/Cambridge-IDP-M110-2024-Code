@@ -33,7 +33,7 @@ D6: magnetic sensor
 
 D7: red button
 
-D8: FREE
+D8: green button
 
 D9: FREE
 
