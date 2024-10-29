@@ -58,7 +58,7 @@ void setup() {
 
   controlservo.attach(3); // attaches the servo on pin 2 to the servo object
 
-  runServo(0); //Check that the servo is homed
+  releaseGrabber(); //Check that the servo is homed
 
 }
 
@@ -74,7 +74,7 @@ void loop() {
   engageGrabber();
   delay(5000);
   releaseGrabber();
-  */
+  
 
   //runServo(0);
 
@@ -205,14 +205,14 @@ int runServo(int newpos){ // sends servo to a specific position
 
 int engageGrabber(){
 
-  runServo(250);
+  runServo(200);
 
 }
 
 
 int releaseGrabber(){
 
-  runServo(160);
+  runServo(120);
 
 }
 
