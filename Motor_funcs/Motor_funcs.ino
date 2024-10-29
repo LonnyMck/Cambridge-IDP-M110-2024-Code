@@ -4,6 +4,13 @@ Test for motors in chassis
 
 #include <Adafruit_MotorShield.h>
 #include <Servo.h>
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+DFRobot_VL53L0X sensor;
+
+int SENSOR_MAG = 6;
+float BLOCK_CLOSE = 75;
 
 
 // Create the motor shield object with the default I2C address
@@ -25,10 +32,25 @@ double speed;
 double duration;
 double time;
 
+//for block sensing
+float block_distance;
+
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
   Serial.println("Motor func test");
+
+  //Grabber sensor initialisation
+  //join i2c bus (address optional for master)
+  Wire.begin();
+  //Set I2C sub-device address
+  sensor.begin(0x50);
+  //Set to Back-to-back mode and high precision mode
+  sensor.setMode(sensor.eContinuous, sensor.eHigh);
+  //Laser rangefinder begins to work
+  sensor.start();
+  pinMode(SENSOR_MAG, INPUT); //sets magnetic to input
+
 
   if (!AFMS.begin()) {         // create with the default frequency 1.6KHz
   // if (!AFMS.begin(1000)) {  // OR with a different frequency, say 1KHz
@@ -40,7 +62,7 @@ void setup() {
 
   controlservo.attach(3); // attaches the servo on pin 2 to the servo object
 
-  runServo(100); //Check that the servo is homed
+  releaseGrabber(); //Check that the servo is homed
 
 }
 
@@ -49,11 +71,19 @@ void loop() {
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
-  
+  runForwards(0);
+  CheckforObstacle();
+
+
+  /*
   engageGrabber();
   delay(5000);
   releaseGrabber();
   
+
+  //runServo(0);
+
+
 
   /*
   runMotor(150, 1, Motor);
@@ -180,16 +210,30 @@ int runServo(int newpos){ // sends servo to a specific position
 
 int engageGrabber(){
 
-  runServo(180);
+  runServo(200);
 
 }
 
 
 int releaseGrabber(){
 
-  runServo(100);
+  runServo(120);
 
 }
+
+
+int CheckforObstacle(){
+
+  //Get the distance
+  if (sensor.getDistance() < BLOCK_CLOSE){
+    stop();
+  }
+
+  Serial.print("Distance: ");
+  Serial.print(sensor.getDistance());
+
+}
+
 
 int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean. Will eventually be an Estop.
 
@@ -201,7 +245,7 @@ int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean
      Serial.println("Interrupt");
      runMotor(0, 1, Motor);
      runMotor(0, 1, Motor2);
-     runServo(100);
+     releaseGrabber();
      while(1);  //Get stuck in an endless loop and doesn't execute any new code
     }
     return true;
