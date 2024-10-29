@@ -10,6 +10,7 @@ Test for motors in chassis
 DFRobot_VL53L0X sensor;
 
 int SENSOR_MAG = 6;
+float BLOCK_CLOSE = 75;
 
 
 // Create the motor shield object with the default I2C address
@@ -30,6 +31,9 @@ char input;
 double speed;
 double duration;
 double time;
+
+//for block sensing
+float block_distance;
 
 
 void setup() {
@@ -67,6 +71,7 @@ void loop() {
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
+  runForwards(0);
   CheckforObstacle();
 
 
@@ -216,11 +221,19 @@ int releaseGrabber(){
 
 }
 
-int CheckforObstacle((){
 
-  
+int CheckforObstacle(){
+
+  //Get the distance
+  if (sensor.getDistance() < BLOCK_CLOSE){
+    stop();
+  }
+
+  Serial.print("Distance: ");
+  Serial.print(sensor.getDistance());
 
 }
+
 
 int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean. Will eventually be an Estop.
 
