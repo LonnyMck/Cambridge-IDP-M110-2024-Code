@@ -9,29 +9,39 @@ const int sensorPinB = 2;
 int buttonState = 0;
 
 // Define green button pin
-const int redButtonPin = 7; //Red button connected to pin 7
+const int redButtonPin = 7;    //Red button connected to pin 7
 const int greenButtonPin = 8;  // Green button connected to pin 8
+
+
+// Define LED pins, consts, vars
+int LED_BLUE = 9;
+int LED_GREEN = 4;
+int LED_RED = 5;
+
+unsigned long time_since_led;  //time variable, time since last LED flash
+
 
 // Motor and servo control
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_DCMotor *MotorR = AFMS.getMotor(3);   // Right motor
-Adafruit_DCMotor *MotorL = AFMS.getMotor(2);   // Left motor
+Adafruit_DCMotor *MotorR = AFMS.getMotor(3);  // Right motor
+Adafruit_DCMotor *MotorL = AFMS.getMotor(2);  // Left motor
 
-bool isStopped = false;         // Flag to track if the robot is stopped
-bool hasTurned = false;         // Flag to ensure the turn happens only once
-bool lineFollowExecuted = false; // Flag to check if lineFollow has run at least once
-bool isStarted = false;          // Flag to check if the green button has been pressed
+bool isStopped = false;           // Flag to track if the robot is stopped
+bool hasTurned = false;           // Flag to ensure the turn happens only once
+bool lineFollowExecuted = false;  // Flag to check if lineFollow has run at least once
+bool isStarted = false;           // Flag to check if the green button has been pressed
 bool isHalted = false;
 
 
 
 void setup() {
-  Serial.begin(9600);           // set up Serial library at 9600 bps
+  Serial.begin(9600);  // set up Serial library at 9600 bps
   Serial.println("Motor and sensor func test");
   isStarted = false;
   if (!AFMS.begin()) {
     Serial.println("Could not find Motor Shield. Check wiring.");
-    while (1);
+    while (1)
+      ;
   }
 
   Serial.println("Motor Shield found.");
@@ -47,7 +57,39 @@ void setup() {
   pinMode(greenButtonPin, INPUT);
   pinMode(redButtonPin, INPUT);
 
+
+  //initialize LEDs
+  pinMode(LED_BLUE, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
 }
+
+
+/*
+
+FUNCTIONS
+
+*/
+
+
+//function for blue light to flash when moving
+void flashWhenMoving( bool isMoving){
+
+  if ( !isMoving ){ //if the robot isn't moving, turn the blue pin OFF
+    digitalWrite(LED_BLUE, LOW);
+    return false;
+  }
+
+  //call this function when the motors running, it will flash the led every 1000 ms
+  if ( (millis() - time_since_led) > 1000){ //if the time since we last changed the LED output is > 100, change it and reset the count
+    bool isHigh = digitalRead(LED_BLUE);
+    digitalWrite(LED_BLUE, !isHigh);
+    time_since_led = millis(); //reset the time for the next interval
+    return true;
+  }
+
+}
+
 
 void loop() {
   // Check if the green button has been pressed
@@ -55,22 +97,22 @@ void loop() {
 
   if (digitalRead(redButtonPin) == HIGH) {
     isHalted = true;
-    stop(); // Immediately stop all motors
+    stop();  // Immediately stop all motors
   }
 
   // If halted, do nothing further
   if (isHalted) {
-    return; // Exit the loop early
+    return;  // Exit the loop early
   }
 
-  if  (!isStarted){
-    
-    if  (buttonState == HIGH) {
+  if (!isStarted) {
+
+    if (buttonState == HIGH) {
       isStarted = true;
       isHalted = false;
       Serial.println("Button High");
     } else {
-      return; // Do nothing until the green button is pressed
+      return;  // Do nothing until the green button is pressed
     }
     delay(100);
   }
@@ -80,16 +122,16 @@ void loop() {
     if (!isStopped) {
       lineFollow(200);
       delay(300);
+
+      flashWhenMoving( isStarted && !isStopped );
     }
     // Run makeTurnR once after stopping, but only if lineFollow has run
     else if (lineFollowExecuted && !hasTurned) {
       makeTurn('R');
-      hasTurned = true; // Ensure makeTurnR is called only once
+      hasTurned = true;  // Ensure makeTurnR is called only once
     }
-
   }
   // Only run lineFollow if the robot is not stopped
-
 }
 
 void lineFollow(int speed) {
@@ -99,36 +141,32 @@ void lineFollow(int speed) {
   bool R = digitalRead(sensorPinR);
   bool RR = digitalRead(sensorPinRR);
   bool B = digitalRead(sensorPinB);
-  
+
 
   // Check conditions with binary literals
-  if (L==HIGH && B==HIGH && R==HIGH) {
+  if (L == HIGH && B == HIGH && R == HIGH) {
     goForward(speed);
     lineFollowExecuted = true;
-  }
-  else if (L==HIGH && B==HIGH && R==LOW) {
-    runMotor(speed + speed/4, 1, MotorR);
+  } else if (L == HIGH && B == HIGH && R == LOW) {
+    runMotor(speed + speed / 4, 1, MotorR);
     runMotor(speed, 1, MotorL);
     lineFollowExecuted = true;
-  }
-  else if (L==LOW && B==HIGH && R==HIGH) {
+  } else if (L == LOW && B == HIGH && R == HIGH) {
     runMotor(speed, 1, MotorR);
-    runMotor(speed + speed/4, 1, MotorL);
+    runMotor(speed + speed / 4, 1, MotorL);
     lineFollowExecuted = true;
-  }
-  else if (L==HIGH && B==LOW && R==LOW) {
-    runMotor(speed + speed/2, 1, MotorR);
+  } else if (L == HIGH && B == LOW && R == LOW) {
+    runMotor(speed + speed / 2, 1, MotorR);
     runMotor(speed, 1, MotorL);
     lineFollowExecuted = true;
-  }
-  else if (L==LOW && B==LOW && R==HIGH) {
+  } else if (L == LOW && B == LOW && R == HIGH) {
     runMotor(speed, 1, MotorR);
-    runMotor(speed + speed/2, 1, MotorL);
+    runMotor(speed + speed / 2, 1, MotorL);
     lineFollowExecuted = true;
   }
-  if (RR==HIGH || LL==HIGH) {
+  if (RR == HIGH || LL == HIGH) {
     stop();
-    isStopped = true; // Set the stop flag to true
+    isStopped = true;  // Set the stop flag to true
   }
 }
 
@@ -166,7 +204,7 @@ void turnL(int speed) {
   runMotor(speed, 1, MotorR);
 }
 
-void stop(){
+void stop() {
   runMotor(0, 1, MotorL);
   runMotor(0, 1, MotorR);
 }
@@ -202,13 +240,10 @@ void makeTurn(char direction) {
   // Stop both motors after alignment
   runMotor(0, 0, MotorL);
   runMotor(0, 0, MotorR);
-  
+
   // Reset flags to resume line following
   isStopped = false;
   hasTurned = false;
   lineFollowExecuted = false;
 }
-
-
-
 
