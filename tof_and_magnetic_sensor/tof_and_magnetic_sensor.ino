@@ -3,6 +3,8 @@
 #include "DFRobot_VL53L0X.h"
 DFRobot_VL53L0X sensor;
 
+float BLOCK_CLOSE = 75; //
+
 int SENSOR_MAG = 6;
 
 void setup() {
