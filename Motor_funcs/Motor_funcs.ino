@@ -4,6 +4,12 @@ Test for motors in chassis
 
 #include <Adafruit_MotorShield.h>
 #include <Servo.h>
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+DFRobot_VL53L0X sensor;
+
+int SENSOR_MAG = 6;
 
 
 // Create the motor shield object with the default I2C address
@@ -30,6 +36,18 @@ void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
   Serial.println("Motor func test");
 
+  //Grabber sensor initialisation
+  //join i2c bus (address optional for master)
+  Wire.begin();
+  //Set I2C sub-device address
+  sensor.begin(0x50);
+  //Set to Back-to-back mode and high precision mode
+  sensor.setMode(sensor.eContinuous, sensor.eHigh);
+  //Laser rangefinder begins to work
+  sensor.start();
+  pinMode(SENSOR_MAG, INPUT); //sets magnetic to input
+
+
   if (!AFMS.begin()) {         // create with the default frequency 1.6KHz
   // if (!AFMS.begin(1000)) {  // OR with a different frequency, say 1KHz
     Serial.println("Could not find Motor Shield. Check wiring.");
@@ -49,13 +67,16 @@ void loop() {
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
+  CheckforObstacle();
+
+
   /*
   engageGrabber();
   delay(5000);
   releaseGrabber();
   */
 
-  runServo(0);
+  //runServo(0);
 
 
 
@@ -192,6 +213,12 @@ int engageGrabber(){
 int releaseGrabber(){
 
   runServo(160);
+
+}
+
+int CheckforObstacle((){
+
+  
 
 }
 
