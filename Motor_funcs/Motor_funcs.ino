@@ -12,14 +12,21 @@ DFRobot_VL53L0X sensor;
 int SENSOR_MAG = 6;
 float BLOCK_CLOSE = 75;
 
+//LEDs are on pins 3, 4, and 5
+int LED_BLUE = 3;
+int LED_GREEN = 4;
+int LED_RED = 5;
+
+//after block is detected, switch var for if it is or isnt magnetic
+bool isMagnetic;
+
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
 // Select which 'port' M1, M2, M3 or M4. In this case, M1
-Adafruit_DCMotor *Motor = AFMS.getMotor(3);
-// You can also make another motor on port M2
-Adafruit_DCMotor *Motor2 = AFMS.getMotor(2);
+Adafruit_DCMotor *MotorR = AFMS.getMotor(3);   // Left motor
+Adafruit_DCMotor *MotorL = AFMS.getMotor(2);  // Right motor
 
 
 Servo controlservo; // create servo object to control a servo
@@ -36,6 +43,7 @@ double time;
 float block_distance;
 
 
+
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
   Serial.println("Motor func test");
@@ -50,6 +58,10 @@ void setup() {
   //Laser rangefinder begins to work
   sensor.start();
   pinMode(SENSOR_MAG, INPUT); //sets magnetic to input
+  //set all LEDs to output
+  pinMode(LED_BLUE, OUTPUT); 
+  pinMode(LED_GREEN, OUTPUT); 
+  pinMode(LED_RED, OUTPUT); 
 
 
   if (!AFMS.begin()) {         // create with the default frequency 1.6KHz
@@ -106,16 +118,14 @@ void loop() {
 //Declaring functions
 ///////////////////////////
 
-int runForwards(int time){  //Optional argument time in ms. Set time = 0 unless needed.
+void runForwards(int time) {
+  speed = 100;  // Set the forward speed
+  runMotor(speed, 1, MotorR);
+  runMotor(speed, 1, MotorL);
 
-speed = 100;  //Work out best value through testing, or add as argument to func.
-
-runMotor(speed, 1, Motor);
-runMotor(speed, 1, Motor2);
-
-if (time != 0){
-  delay(time);
-  stop();
+  if (time != 0) {
+    delay(time);
+    stopMotors();
   }
 }
 
@@ -123,32 +133,30 @@ int runBackwards(int time){  //Optional argument time. Set time = 0 unless neede
 
   speed = 100;  //Work out best value through testing, or add as argument to func.
 
-  runMotor(speed, 0, Motor);
-  runMotor(speed, 0, Motor2);
+  runMotor(speed, 0, MotorR);
+  runMotor(speed, 0, MotorL);
 
   if (time != 0){
     delay(time);
-    stop();
+    stopMotors();
     }
 }
 
-int stop(){  //Optional argument time. Set time = 0 unless needed.
-
-  runMotor(0, 1, Motor);
-  runMotor(0, 1, Motor2);
-
+void stopMotors() {
+  runMotor(0, 1, MotorR);
+  runMotor(0, 1, MotorL);
 }
 
 int turnRight(int degrees){ ///////////// Need to calibrate the time and speeds
 
   time = (degrees/90) * 4400;  //This needs calibrating
 
-  runMotor(100, 1, Motor);  //May need to switch these around
-  runMotor(50, 0, Motor2); //Spins backwards
+  runMotor(100, 1, MotorR);  //May need to switch these around
+  runMotor(50, 0, MotorL); //Spins backwards
 
   delay(time);
 
-  stop();
+  stopMotors();
 
 }
 
@@ -156,44 +164,32 @@ int turnLeft(int degrees){ ///////////// Need to calibrate the time and speeds
 
   time = (degrees/90) * 4400;  //This needs calibrating
 
-  runMotor(50, 0, Motor);  //May need to switch these around
-  runMotor(100, 1, Motor2); //Spins forwards
+  runMotor(50, 0, MotorR);  //May need to switch these around
+  runMotor(100, 1, MotorL); //Spins forwards
 
   delay(time);
 
-  stop();
+  stopMotors();
 
 }
 
 
-int runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject){ // direction should be 1 for Forward, 0 for Backward. Speed should be an int between 0 and 255.
-  
+void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject) {
   running = check_interrupt(); //Check for interrupt
-
-  Serial.println("Change in Motor");
-
-  if (speed == 0){
+  if (speed == 0) {
     motorObject->run(RELEASE);
-    Serial.println("Stopping");
-  }
-
-  else if (direction == 1){
-    motorObject->setSpeed(speed);
-    motorObject->run(BACKWARD);
-    Serial.println("Moving forward at " + String(speed));
-  } 
-
-  else if (direction == 0){
+    // Serial.println("Stopping motor");
+  } else if (direction == 1) {
     motorObject->setSpeed(speed);
     motorObject->run(FORWARD);
-    Serial.println("Moving backward at " + String(speed));
-  }
-
-
-  else {
+    // Serial.println("Moving forward at speed " + String(speed));
+  } else if (direction == 0) {
+    motorObject->setSpeed(speed);
+    motorObject->run(BACKWARD);
+    // Serial.println("Moving backward at speed " + String(speed));
+  } else {
     Serial.println("Incorrect direction argument received");
   }
-
 }
 
 int runServo(int newpos){ // sends servo to a specific position
@@ -226,12 +222,30 @@ int CheckforObstacle(){
 
   //Get the distance
   if (sensor.getDistance() < BLOCK_CLOSE){
-    stop();
+    stopMotors();
+    engageGrabber();
   }
 
   Serial.print("Distance: ");
   Serial.print(sensor.getDistance());
 
+}
+
+
+void shineLedBlockType( bool isMagnetic ){  //shine correct LED depending on if magnetic or non magnetic
+  if (isMagnetic){ 
+    digitalWrite(LED_RED, HIGH ); 
+  }else{
+    digitalWrite( LED_GREEN, HIGH );
+  }
+
+}
+
+//turns all LEDs off
+void turnLedsOff(){
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_BLUE, LOW);
+  digitalWrite(LED_GREEN, LOW);
 }
 
 
@@ -243,8 +257,8 @@ int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean
     
     if(input == 't'){
      Serial.println("Interrupt");
-     runMotor(0, 1, Motor);
-     runMotor(0, 1, Motor2);
+     runMotor(0, 1, MotorR);
+     runMotor(0, 1, MotorL);
      releaseGrabber();
      while(1);  //Get stuck in an endless loop and doesn't execute any new code
     }
