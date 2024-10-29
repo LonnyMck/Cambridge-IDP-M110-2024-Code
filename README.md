@@ -35,7 +35,7 @@ D7: red button
 
 D8: green button
 
-D9: FREE
+D9: blue LED
 
 D10: far left sensor pin
 
