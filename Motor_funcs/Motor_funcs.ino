@@ -11,7 +11,7 @@ DFRobot_VL53L0X sensor;
 
 int SENSOR_MAG = 6;
 float BLOCK_NEARBY = 150;
-float BLOCK_CLOSE = 65; //Try messing about with this value, maybe reducing it
+float BLOCK_CLOSE = 60; //Try messing about with this value, maybe reducing it
 
 //LEDs are on pins 3, 4, and 5
 int LED_BLUE = 3;
@@ -77,6 +77,8 @@ void setup() {
 
   releaseGrabber(); //Set the grabber to be released to start
 
+  speed = 200;
+
 }
 
 void loop() {
@@ -86,10 +88,14 @@ void loop() {
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
-  runForwards(0,150);
+
+  
+  runForwards(0,speed);
 
   //checkMagnetic();
   CheckforBlock();
+  
+
 
   /*
   engageGrabber();
@@ -225,14 +231,16 @@ int CheckforBlock(){
 
   //Get the distance
   if (sensor.getDistance() < BLOCK_CLOSE and grabberEngaged == false) { //check that the obstacle detected isn't the block held in grabber
+    Serial.println("Block close");
     stopMotors();
     engageGrabber();
   }
 
-  /*
+  
   else if (sensor.getDistance() < BLOCK_NEARBY and grabberEngaged == false){
-      runForwards(0,100);
-  }*/
+      Serial.println("Block nearby");
+      speed = 150;
+  }
 
   Serial.print("Distance: ");
   Serial.print(sensor.getDistance());
