@@ -137,11 +137,17 @@ void loop() {
     bool B = digitalRead(sensorPinB);
 
     if (!hasInitiated){
-      initiate(LL, L, R, RR);
-      counter++;
-      hasInitiated = true;
+
+      goForward(200);
+
+      if (L==HIGH && R==HIGH){
+        stop();
+        counter++;
+        hasInitiated = true;
+      }
     }
 
+    Serial.println(counter);
     flashWhenMoving( isStarted );
 
     if (hasInitiated==true && counter<3 && megacounter==0) {
@@ -159,24 +165,16 @@ void loop() {
 }
 
 
-void initiate(bool LL, bool L, bool R, bool RR) {
-  while (R == LOW && L == LOW){
-    goForward(200);
-    Serial.println("Running");
-    if (R==HIGH && L==HIGH){
-      Serial.println("Done initiating");
-      stop();
-      break;
-    }
-  }
-}
 
 
 void normalFollow(int speed, bool L , bool R,  bool B){
-    if (L == HIGH && B == HIGH && R == HIGH) {
+  if (L == HIGH && B == HIGH && R == HIGH) {
     goForward(speed);
   } else if (L == HIGH && B == HIGH && R == LOW) {
     runMotor(speed + speed / 4, 1, MotorR);
+    runMotor(speed, 1, MotorL);
+  } else if (L == HIGH && B == LOW && R == HIGH) {
+    runMotor(speed, 1, MotorR);
     runMotor(speed, 1, MotorL);
   } else if (L == LOW && B == HIGH && R == HIGH) {
     runMotor(speed, 1, MotorR);
