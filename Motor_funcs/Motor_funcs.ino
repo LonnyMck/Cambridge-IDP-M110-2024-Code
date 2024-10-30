@@ -10,7 +10,8 @@ Test for motors in chassis
 DFRobot_VL53L0X sensor;
 
 int SENSOR_MAG = 6;
-float BLOCK_CLOSE = 75;
+float BLOCK_NEARBY = 150;
+float BLOCK_CLOSE = 65; //Try messing about with this value, maybe reducing it
 
 //LEDs are on pins 3, 4, and 5
 int LED_BLUE = 3;
@@ -19,6 +20,7 @@ int LED_RED = 5;
 
 //after block is detected, switch var for if it is or isnt magnetic
 bool isMagnetic;
+bool grabberEngaged;
 
 
 // Create the motor shield object with the default I2C address
@@ -40,8 +42,7 @@ double duration;
 double time;
 
 //for block sensing
-float block_distance;
-
+//float block_distance;
 
 
 void setup() {
@@ -72,39 +73,34 @@ void setup() {
 
   Serial.println("Motor Shield found.");
 
-  controlservo.attach(3); // attaches the servo on pin 2 to the servo object
+  controlservo.attach(3); // attaches the servo on pin 3 to the servo object
 
-  releaseGrabber(); //Check that the servo is homed
+  releaseGrabber(); //Set the grabber to be released to start
 
 }
 
 void loop() {
 
+  //releaseGrabber();
+
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
-  runForwards(0);
-  CheckforObstacle();
+  runForwards(0,150);
 
+  //checkMagnetic();
+  CheckforBlock();
 
   /*
   engageGrabber();
   delay(5000);
   releaseGrabber();
-  
-
-  //runServo(0);
-
-
-
-  /*
-  runMotor(150, 1, Motor);
-  runMotor(150, 1, Motor2);
-  delay(1000);
-  runMotor(0, 1, Motor);
-  runMotor(0, 1, Motor2);
-  delay(1000);
   */
+
+  //runServo(0);  //Useful, can run this as the only code in the if(running) section to move the servo to certain positions. 0 is an open grabber, increasing the number closes it more and more.
+
+
+
 
 
   
@@ -118,8 +114,8 @@ void loop() {
 //Declaring functions
 ///////////////////////////
 
-void runForwards(int time) {
-  speed = 100;  // Set the forward speed
+void runForwards(int time, double speed) {
+  //speed = 100;  // Set the forward speed
   runMotor(speed, 1, MotorR);
   runMotor(speed, 1, MotorL);
 
@@ -206,36 +202,64 @@ int runServo(int newpos){ // sends servo to a specific position
 
 int engageGrabber(){
 
-  runServo(200);
+  Serial.println("Engaging grabber");
+  grabberEngaged = true;
+  runServo(100);
+  checkMagnetic();  //try it here
 
 }
 
 
 int releaseGrabber(){
 
-  runServo(120);
+  Serial.println("Releasing grabber");
+  grabberEngaged = false;
+  isMagnetic = false;
+  runServo(0);
+  turnLedsOff();
 
 }
 
 
-int CheckforObstacle(){
+int CheckforBlock(){
 
   //Get the distance
-  if (sensor.getDistance() < BLOCK_CLOSE){
+  if (sensor.getDistance() < BLOCK_CLOSE and grabberEngaged == false) { //check that the obstacle detected isn't the block held in grabber
     stopMotors();
     engageGrabber();
   }
+
+  /*
+  else if (sensor.getDistance() < BLOCK_NEARBY and grabberEngaged == false){
+      runForwards(0,100);
+  }*/
 
   Serial.print("Distance: ");
   Serial.print(sensor.getDistance());
 
 }
 
+int checkMagnetic(){  //Takes three readings, check that this code works
+
+  for (int count = 0; count <= 10; count++){
+     			isMagnetic = digitalRead(SENSOR_MAG);
+          if (isMagnetic == true){
+            break;
+          }
+  }
+
+  Serial.print(", Magnetic: ");
+  Serial.println( digitalRead(SENSOR_MAG) );
+  shineLedBlockType( digitalRead(SENSOR_MAG) );
+
+}
 
 void shineLedBlockType( bool isMagnetic ){  //shine correct LED depending on if magnetic or non magnetic
   if (isMagnetic){ 
     digitalWrite(LED_RED, HIGH ); 
+    digitalWrite( LED_GREEN, LOW );
   }else{
+    digitalWrite(LED_RED, LOW ); 
     digitalWrite( LED_GREEN, HIGH );
   }
 
