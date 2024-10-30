@@ -1,4 +1,14 @@
 #include <Adafruit_MotorShield.h>
+#include <Servo.h>
+#include "Arduino.h"
+#include "Wire.h"
+#include "DFRobot_VL53L0X.h"
+DFRobot_VL53L0X sensor;
+
+
+int SENSOR_MAG = 6;
+float BLOCK_NEARBY = 150;
+float BLOCK_CLOSE = 60;
 
 // Define sensor pins
 const int sensorPinLL = 13;
@@ -7,6 +17,11 @@ const int sensorPinR = 11;
 const int sensorPinRR = 10;
 const int sensorPinB = 2;
 int buttonState = 0;
+
+//after block is detected, switch var for if it is or isnt magnetic
+bool isMagnetic;
+bool grabberEngaged;
+
 
 // Define green button pin
 const int redButtonPin = 7;    //Red button connected to pin 7
@@ -20,11 +35,19 @@ int LED_RED = 5;
 
 unsigned long time_since_led;  //time variable, time since last LED flash
 
-
 // Motor and servo control
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *MotorR = AFMS.getMotor(3);  // Right motor
 Adafruit_DCMotor *MotorL = AFMS.getMotor(2);  // Left motor
+
+Servo controlservo; // create servo object to control a servo
+int servopos = 0; // variable to store the servo position
+
+bool running = true;
+char input;
+
+
+
 
 bool isStarted = false;           // Flag to check if the green button has been pressed
 bool isHalted = false;
@@ -39,8 +62,6 @@ void setup() {
   isStarted = false;
   if (!AFMS.begin()) {
     Serial.println("Could not find Motor Shield. Check wiring.");
-    while (1)
-      ;
   }
 
   Serial.println("Motor Shield found.");
@@ -61,6 +82,20 @@ void setup() {
   pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_RED, OUTPUT);
+
+
+  controlservo.attach(3); // attaches the servo on pin 3 to the servo object
+
+  releaseGrabber(); //Set the grabber to be released to start
+
+  Wire.begin();
+  //Set I2C sub-device address
+  sensor.begin(0x50);
+  //Set to Back-to-back mode and high precision mode
+  sensor.setMode(sensor.eContinuous, sensor.eHigh);
+  //Laser rangefinder begins to work
+  sensor.start();
+  pinMode(SENSOR_MAG, INPUT); //sets magnetic to input
 }
 
 
@@ -214,10 +249,13 @@ void loop() {
       junctionReset();
     }
     if (megacounter == 5 && counter == 0) {
-      normalFollow(150, L , R , B);
+      normalFollow(100, L , R , B);
+      CheckforBlock();
       if (B == HIGH) {
-      countFollow(150 , LL , L , R , RR , B);
+      countFollow(100 , LL , L , R , RR , B);
       //activate pickup mechanism here
+      
+
       }
     }
   }
@@ -364,4 +402,108 @@ void makeTurn(char direction) {
   runMotor(0, 0, MotorR);
 
   // Reset flags to resume line following
+}
+
+
+int runServo(int newpos){ // sends servo to a specific position
+
+  running = check_interrupt(); //Check for interrupt
+
+  Serial.println("Servo moving to position " + String(newpos));
+  controlservo.write(newpos); 
+  servopos = newpos;
+  Serial.println("Servo pos = " + String(servopos));
+  delay(2000);
+
+}
+
+int engageGrabber(){
+
+  Serial.println("Engaging grabber");
+  grabberEngaged = true;
+  runServo(100);
+  checkMagnetic();  //try it here
+
+}
+
+
+int releaseGrabber(){
+
+  Serial.println("Releasing grabber");
+  grabberEngaged = false;
+  isMagnetic = false;
+  runServo(0);
+  turnLedsOff();
+
+}
+
+
+int CheckforBlock(){
+
+  //Get the distance
+  if (sensor.getDistance() < BLOCK_CLOSE and grabberEngaged == false) { //check that the obstacle detected isn't the block held in grabber
+    Serial.println("Block close");
+    stop();
+    engageGrabber();
+  }
+
+  
+  else if (sensor.getDistance() < BLOCK_NEARBY and grabberEngaged == false) {
+      Serial.println("Block nearby");
+      // speed = 150;  will implement later 
+  }
+
+  Serial.print("Distance: ");
+  Serial.print(sensor.getDistance());
+
+}
+
+int checkMagnetic(){  //Takes three readings, check that this code works
+
+  for (int count = 0; count <= 10; count++){
+     			isMagnetic = digitalRead(SENSOR_MAG);
+          if (isMagnetic == true){
+            break;
+          }
+  }
+
+  Serial.print(", Magnetic: ");
+  Serial.println( digitalRead(SENSOR_MAG) );
+  shineLedBlockType( digitalRead(SENSOR_MAG) );
+
+}
+
+void shineLedBlockType( bool isMagnetic ){  //shine correct LED depending on if magnetic or non magnetic
+  if (isMagnetic){ 
+    digitalWrite(LED_RED, HIGH ); 
+    digitalWrite( LED_GREEN, LOW );
+  }else{
+    digitalWrite(LED_RED, LOW ); 
+    digitalWrite( LED_GREEN, HIGH );
+  }
+
+}
+
+//turns all LEDs off
+void turnLedsOff(){
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_BLUE, LOW);
+  digitalWrite(LED_GREEN, LOW);
+}
+
+
+int check_interrupt(){ // checks for interrupts and breaks loop. Returns boolean. Will eventually be an Estop.
+
+  if(Serial.available()){ // Adds keyboard interrupt
+        input = Serial.read();
+      }
+    
+    if(input == 't'){
+     Serial.println("Interrupt");
+     runMotor(0, 1, MotorR);
+     runMotor(0, 1, MotorL);
+     releaseGrabber();
+     while(1);  //Get stuck in an endless loop and doesn't execute any new code
+    }
+    return true;
 }
