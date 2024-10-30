@@ -29,6 +29,7 @@ Adafruit_DCMotor *MotorL = AFMS.getMotor(2);  // Left motor
 bool isStarted = false;           // Flag to check if the green button has been pressed
 bool isHalted = false;
 
+int megacounter = 0;
 int counter = 0;
 
 void setup() {
@@ -88,6 +89,8 @@ void flashWhenMoving( bool isMoving){
 }
 
 
+bool hasInitiated = false;
+
 void loop() {
   // Check if the red button has been pressed
   if (digitalRead(redButtonPin) == HIGH) {
@@ -108,7 +111,6 @@ void loop() {
     }
   }
 
-  // If halted, do nothing further
   if (isHalted) {
     return;  // Exit the loop early
   }
@@ -134,25 +136,38 @@ void loop() {
     bool RR = digitalRead(sensorPinRR);
     bool B = digitalRead(sensorPinB);
 
-
-    if (!isStopped) {
-      initiate(R , L);\
-      counter
-      delay(300);
-      flashWhenMoving( isStarted && !isStopped );
-
-
-      lineFollow(200 , LL , L , R , RR , B);
-
+    if (!hasInitiated){
+      initiate(LL, L, R, RR);
+      counter++;
+      hasInitiated = true;
     }
- 
+
+    flashWhenMoving( isStarted );
+
+    if (hasInitiated==true && counter<3 && megacounter==0) {
+      countFollow(200 , LL , L , R , RR , B);
+    } else if (counter==3 && megacounter==0) {
+      stop();
+      delay(500);
+      makeTurn('L');
+      countFollow(200, LL, L, R, RR, B);
+    }
   }
 
+  delay(300);
+  Serial.println(counter);
 }
 
+
 void initiate(bool LL, bool L, bool R, bool RR) {
-  while (R == LOW || L == LOW || RR == LOW || LL == LOW){
-    goForward(100);
+  while (R == LOW && L == LOW){
+    goForward(200);
+    Serial.println("Running");
+    if (R==HIGH && L==HIGH){
+      Serial.println("Done initiating");
+      stop();
+      break;
+    }
   }
 }
 
@@ -175,56 +190,17 @@ void normalFollow(int speed, bool L , bool R,  bool B){
   }
 }
 
-bool counterabitily = true;
+bool counterability = true;
 
-void lineFollow(int speed, int decisionNumber, bool LL, bool L , bool R, bool RR, bool B) {
-
-  if (decisionNumber==0){
-    normalFollow(speed, L, R, B);
-    if ((RR == HIGH || LL == HIGH) && counterability == true) {
-      counter++;
-      counterability = false;
-    }
-
-    if ((RR == LOW && LL == LOW) && counterability == false){
-      counterability = true;
-    }
+void countFollow(int speed, bool LL, bool L , bool R, bool RR, bool B) {
+  normalFollow(speed, L, R, B);
+  if ((RR == HIGH || LL == HIGH) && counterability == true) {
+    counter++;
+    counterability = false;
   }
-
-  if (decisionNumber == 1) {
-    normalFollow(speed, L , R, B);
-    if (RR == HIGH || LL == HIGH) {
-      if (counterability == true) {
-        counter++;
-        counterability == false;
-      }
-     
-      stop();
-      delay(500);
-      makeTurn('R');
-    }
-
-    if ((RR == LOW && LL == LOW) && counterability == false){
-      counterability = true;
-    }
-  } 
-  
-  if (decisionNumber == 2) {
-    normalFollow(speed, L , R, B);
-    if (RR == HIGH || LL == HIGH) {
-      if (counterability == true) {
-        counter++;
-        counterability == flase;
-      }
-
-      stop();
-      delay(500);
-      makeTurn('L');
-    }
-
-    if ((RR == LOW && LL == LOW) && counterability == false){
-      counterability = true;
-    }
+  if ((RR == LOW && LL == LOW) && counterability == false){
+    counterability = true;
+  }
 }
 
 void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject) {
@@ -299,8 +275,5 @@ void makeTurn(char direction) {
   runMotor(0, 0, MotorR);
 
   // Reset flags to resume line following
-  isStopped = false;
-  hasTurned = false;
-  lineFollowExecuted = false;
 }
 
