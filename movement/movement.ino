@@ -1,22 +1,4 @@
 #include <Adafruit_MotorShield.h>
-#include <Servo.h>
-#include "Arduino.h"
-#include "Wire.h"
-#include "DFRobot_VL53L0X.h"
-DFRobot_VL53L0X sensor;
-
-int SENSOR_MAG = 6;
-float BLOCK_NEARBY = 150;
-float BLOCK_CLOSE = 60; //Try messing about with this value, maybe reducing it
-
-//LEDs are on pins 3, 4, and 5
-int LED_BLUE = 3;
-int LED_GREEN = 4;
-int LED_RED = 5;
-
-//after block is detected, switch var for if it is or isnt magnetic
-bool isMagnetic;
-bool grabberEngaged;
 
 // Define sensor pins
 const int sensorPinLL = 13;
@@ -30,13 +12,11 @@ int buttonState = 0;
 const int redButtonPin = 7;    //Red button connected to pin 7
 const int greenButtonPin = 8;  // Green button connected to pin 8
 
-//Grabber variables
-Servo controlservo; // create servo object to control a servo
-int servopos = 0; // variable to store the servo position
-char input;
-double speed;
-double duration;
-double time;
+
+// Define LED pins, consts, vars
+int LED_BLUE = 9;
+int LED_GREEN = 4;
+int LED_RED = 5;
 
 unsigned long time_since_led;  //time variable, time since last LED flash
 
@@ -51,25 +31,12 @@ bool isHalted = false;
 
 int megacounter = 0;
 int counter = 0;
+bool counterability = true;
 
 void setup() {
   Serial.begin(9600);  // set up Serial library at 9600 bps
   Serial.println("Motor and sensor func test");
   isStarted = false;
-
-//Grabber sensor initialisation
-  //join i2c bus (address optional for master)
-  Wire.begin();
-  //Set I2C sub-device address
-  sensor.begin(0x50);
-  //Set to Back-to-back mode and high precision mode
-  sensor.setMode(sensor.eContinuous, sensor.eHigh);
-  //Laser rangefinder begins to work
-  sensor.start();
-  pinMode(SENSOR_MAG, INPUT); //sets magnetic to input
-  controlservo.attach(3); // attaches the servo on pin 3 to the servo object
-
-
   if (!AFMS.begin()) {
     Serial.println("Could not find Motor Shield. Check wiring.");
     while (1)
@@ -171,67 +138,126 @@ void loop() {
     bool B = digitalRead(sensorPinB);
 
     if (!hasInitiated){
-
       goForward(200);
-
-      if (L==HIGH && R==HIGH){
+      if (L==HIGH && R==HIGH) {
         stop();
+        delay(500);
         counter++;
+        Serial.println(counter);
         hasInitiated = true;
+        counterability = false;
+        Serial.println("counter off from isStarted");
+        goForward(200);
+        delay(1000);
       }
     }
 
-    Serial.println(counter);
     flashWhenMoving( isStarted );
 
     if (hasInitiated==true && counter<3 && megacounter==0) {
       countFollow(200 , LL , L , R , RR , B);
-    } else if (counter==3 && megacounter==0) {
+      if ((RR == LOW && LL == LOW) && counterability == false){
+      counterability = true;
+      Serial.println("First cross passed, counter on again");
+      }
+
+    }
+    
+    else if (counter==3 && megacounter==0) {
       stop();
       delay(500);
       makeTurn('L');
-      countFollow(200, LL, L, R, RR, B);
+      counterability = true;
+      counter = 0;
+      megacounter++;
+      Serial.println(megacounter);
+      counterability = false;
+      return;
+    
     }
+
+    if (megacounter == 1 && counter == 0) {
+      normalFollow(200, L , R , B);
+      if (B == HIGH) {
+      countFollow(200 , LL , L , R , RR , B);
+      }
+    }
+
+    else if (counter == 1 && megacounter == 1) {
+      makeTurn('R');
+      counterability = true;
+      counter = 0;
+      megacounter++;
+      Serial.println(megacounter);
+      counterability = false;
+    }
+
+    if (megacounter == 2 && counter == 0) {
+      normalFollow(200, L , R , B);
+      if (B == HIGH) {
+      countFollow(200 , LL , L , R , RR , B);
+      }
+
   }
 
-  delay(300);
-  Serial.println(counter);
+  delay(100);
+  }
 }
 
 
+void initiate(bool LL, bool L, bool R, bool RR) {
+  while (R == LOW && L == LOW){
+    goForward(200);
+    Serial.println("Running");
+    if (R==HIGH && L==HIGH){
+      Serial.println("Done initiating");
+      stop();
+      break;
+    }
+  }
+}
 
 
 void normalFollow(int speed, bool L , bool R,  bool B){
-  if (L == HIGH && B == HIGH && R == HIGH) {
+    if (L == HIGH && B == HIGH && R == HIGH) {
     goForward(speed);
+    Serial.println("1111");
+  } else if (L == HIGH && B == LOW && R == HIGH) {
+    goForward(speed);
+    Serial.println("2222");
   } else if (L == HIGH && B == HIGH && R == LOW) {
     runMotor(speed + speed / 4, 1, MotorR);
     runMotor(speed, 1, MotorL);
-  } else if (L == HIGH && B == LOW && R == HIGH) {
-    runMotor(speed, 1, MotorR);
-    runMotor(speed, 1, MotorL);
+    Serial.println("3333");
+
   } else if (L == LOW && B == HIGH && R == HIGH) {
     runMotor(speed, 1, MotorR);
     runMotor(speed + speed / 4, 1, MotorL);
+    Serial.println("4444");
   } else if (L == HIGH && B == LOW && R == LOW) {
-    runMotor(speed + speed / 2, 1, MotorR);
-    runMotor(speed, 1, MotorL);
-  } else if (L == LOW && B == LOW && R == HIGH) {
+    runMotor(speed + speed / 3, 1, MotorL);
     runMotor(speed, 1, MotorR);
-    runMotor(speed + speed / 2, 1, MotorL);
+    Serial.println("5555");
+  } else if (L == LOW && B == LOW && R == HIGH) {
+    runMotor(speed, 1, MotorL);
+    runMotor(speed + speed / 3, 1, MotorR);
+    Serial.println("6666");
   }
 }
 
-bool counterability = true;
+
 
 void countFollow(int speed, bool LL, bool L , bool R, bool RR, bool B) {
-  normalFollow(speed, L, R, B);
+  if ((RR == LOW && LL == LOW) && counterability == false){
+    normalFollow(speed, L, R, B);
+    counterability = true;
+    Serial.println("counter on from void countfollow");
+  }
   if ((RR == HIGH || LL == HIGH) && counterability == true) {
     counter++;
+    Serial.println(counter);
     counterability = false;
-  }
-  if ((RR == LOW && LL == LOW) && counterability == false){
-    counterability = true;
+    Serial.println("counter off from void countfollow");
   }
 }
 
@@ -289,7 +315,7 @@ void makeTurn(char direction) {
     turnL(200);
   }
 
-  delay(3000);
+  delay(4500);
 
   // Continue turning until the correct sensor pin goes HIGH again, aligning with the line
   if (direction == 'R') {
@@ -307,93 +333,4 @@ void makeTurn(char direction) {
   runMotor(0, 0, MotorR);
 
   // Reset flags to resume line following
-}
-
-
-
-
-int CheckforBlock(){
-
-  //Get the distance
-  if (sensor.getDistance() < BLOCK_CLOSE and grabberEngaged == false) { //check that the obstacle detected isn't the block held in grabber
-    Serial.println("Block close");
-    stopMotors();
-    engageGrabber();
-  }
-
-  
-  else if (sensor.getDistance() < BLOCK_NEARBY and grabberEngaged == false){
-      Serial.println("Block nearby");
-      speed = 150;
-  }
-
-  Serial.print("Distance: ");
-  Serial.print(sensor.getDistance());
-
-}
-
-int checkMagnetic(){  //Takes three readings, check that this code works
-
-  for (int count = 0; count <= 10; count++){
-     			isMagnetic = digitalRead(SENSOR_MAG);
-          if (isMagnetic == true){
-            break;
-          }
-  }
-
-  Serial.print(", Magnetic: ");
-  Serial.println( digitalRead(SENSOR_MAG) );
-  shineLedBlockType( digitalRead(SENSOR_MAG) );
-
-}
-
-void shineLedBlockType( bool isMagnetic ){  //shine correct LED depending on if magnetic or non magnetic
-  if (isMagnetic){ 
-    digitalWrite(LED_RED, HIGH ); 
-    digitalWrite( LED_GREEN, LOW );
-  }else{
-    digitalWrite(LED_RED, LOW ); 
-    digitalWrite( LED_GREEN, HIGH );
-  }
-
-}
-
-//turns all LEDs off
-void turnLedsOff(){
-  digitalWrite(LED_RED, LOW);
-  digitalWrite(LED_BLUE, LOW);
-  digitalWrite(LED_GREEN, LOW);
-}
-
-
-int runServo(int newpos){ // sends servo to a specific position
-
-  running = check_interrupt(); //Check for interrupt
-
-  Serial.println("Servo moving to position " + String(newpos));
-  controlservo.write(newpos); 
-  servopos = newpos;
-  Serial.println("Servo pos = " + String(servopos));
-  delay(2000);
-
-}
-
-int engageGrabber(){
-
-  Serial.println("Engaging grabber");
-  grabberEngaged = true;
-  runServo(100);
-  checkMagnetic();  //try it here
-
-}
-
-
-int releaseGrabber(){
-
-  Serial.println("Releasing grabber");
-  grabberEngaged = false;
-  isMagnetic = false;
-  runServo(0);
-  turnLedsOff();
-
 }
