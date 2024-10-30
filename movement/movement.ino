@@ -143,6 +143,7 @@ void loop() {
         stop();
         delay(500);
         counter++;
+        Serial.println("Counter update");
         Serial.println(counter);
         hasInitiated = true;
         counterability = false;
@@ -163,17 +164,11 @@ void loop() {
 
     }
     
-    else if (counter==3 && megacounter==0) {
+    else if (megacounter==0 && counter==3) {
       stop();
       delay(500);
       makeTurn('L');
-      counterability = true;
-      counter = 0;
-      megacounter++;
-      Serial.println(megacounter);
-      counterability = false;
-      return;
-    
+      junctionReset();
     }
 
     if (megacounter == 1 && counter == 0) {
@@ -185,11 +180,7 @@ void loop() {
 
     else if (counter == 1 && megacounter == 1) {
       makeTurn('R');
-      counterability = true;
-      counter = 0;
-      megacounter++;
-      Serial.println(megacounter);
-      counterability = false;
+      junctionReset();
     }
 
     if (megacounter == 2 && counter == 0) {
@@ -197,13 +188,52 @@ void loop() {
       if (B == HIGH) {
       countFollow(200 , LL , L , R , RR , B);
       }
-
+    
+    if (megacounter == 2 && counter == 2) {
+      makeTurn('R');
+      junctionReset();
+    }
+    if (megacounter == 3 && counter == 0) {
+      normalFollow(200, L , R , B);
+      if (B == HIGH) {
+      countFollow(200 , LL , L , R , RR , B);
+      }
+    if (megacounter == 3 && counter == 1) {
+      makeTurn('R');
+      junctionReset();
+    }
+    if (megacounter == 4 && counter == 0) {
+      normalFollow(200, L , R , B);
+      if (B == HIGH) {
+      countFollow(200 , LL , L , R , RR , B);
+      }
+    if (megacounter == 4 && counter == 1) {
+      makeTurn('R');
+      junctionReset();
+    if (megacounter == 5 && counter == 0) {
+      normalFollow(150, L , R , B);
+      if (B == HIGH) {
+      countFollow(150 , LL , L , R , RR , B);
+      //activate pickup mechanism here
+      }
   }
 
   delay(100);
   }
 }
 
+
+void junctionReset() {
+  counterability = true;
+  Serial.println("counter on from isStarted");
+  counter = 0;
+  Serial.println("Counter reset")
+  megacounter++;
+  Serial.println("Megacounter update");
+  Serial.println(megacounter);
+  counterability = false;
+  Serial.println("counter off from isStarted");
+}
 
 void initiate(bool LL, bool L, bool R, bool RR) {
   while (R == LOW && L == LOW){
@@ -251,13 +281,14 @@ void countFollow(int speed, bool LL, bool L , bool R, bool RR, bool B) {
   if ((RR == LOW && LL == LOW) && counterability == false){
     normalFollow(speed, L, R, B);
     counterability = true;
-    Serial.println("counter on from void countfollow");
+    Serial.println("counter on from countfollow");
   }
   if ((RR == HIGH || LL == HIGH) && counterability == true) {
     counter++;
+    Serial.println("Counter update");
     Serial.println(counter);
     counterability = false;
-    Serial.println("counter off from void countfollow");
+    Serial.println("counter off from countfollow");
   }
 }
 
