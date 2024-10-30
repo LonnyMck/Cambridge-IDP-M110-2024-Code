@@ -26,13 +26,10 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_DCMotor *MotorR = AFMS.getMotor(3);  // Right motor
 Adafruit_DCMotor *MotorL = AFMS.getMotor(2);  // Left motor
 
-bool isStopped = false;           // Flag to track if the robot is stopped
-bool hasTurned = false;           // Flag to ensure the turn happens only once
-bool lineFollowExecuted = false;  // Flag to check if lineFollow has run at least once
 bool isStarted = false;           // Flag to check if the green button has been pressed
 bool isHalted = false;
 
-
+int counter = 0;
 
 void setup() {
   Serial.begin(9600);  // set up Serial library at 9600 bps
@@ -129,56 +126,105 @@ void loop() {
   }
 
   if (isStarted) {
-    if (!isStopped) {
-      lineFollow(200);
-      delay(300);
 
+
+    bool LL = digitalRead(sensorPinLL);
+    bool L = digitalRead(sensorPinL);
+    bool R = digitalRead(sensorPinR);
+    bool RR = digitalRead(sensorPinRR);
+    bool B = digitalRead(sensorPinB);
+
+
+    if (!isStopped) {
+      initiate(R , L);\
+      counter
+      delay(300);
       flashWhenMoving( isStarted && !isStopped );
+
+
+      lineFollow(200 , LL , L , R , RR , B);
+
     }
-    // Run makeTurnR once after stopping, but only if lineFollow has run
-    else if (lineFollowExecuted && !hasTurned) {
-      makeTurn('R');
-      hasTurned = true;  // Ensure makeTurnR is called only once
-    }
+ 
   }
 
 }
 
-
-void lineFollow(int speed) {
-
-  bool LL = digitalRead(sensorPinLL);
-  bool L = digitalRead(sensorPinL);
-  bool R = digitalRead(sensorPinR);
-  bool RR = digitalRead(sensorPinRR);
-  bool B = digitalRead(sensorPinB);
+void initiate(bool LL, bool L, bool R, bool RR) {
+  while (R == LOW || L == LOW || RR == LOW || LL == LOW){
+    goForward(100);
+  }
+}
 
 
-  // Check conditions with binary literals
-  if (L == HIGH && B == HIGH && R == HIGH) {
+void normalFollow(int speed, bool L , bool R,  bool B){
+    if (L == HIGH && B == HIGH && R == HIGH) {
     goForward(speed);
-    lineFollowExecuted = true;
   } else if (L == HIGH && B == HIGH && R == LOW) {
     runMotor(speed + speed / 4, 1, MotorR);
     runMotor(speed, 1, MotorL);
-    lineFollowExecuted = true;
   } else if (L == LOW && B == HIGH && R == HIGH) {
     runMotor(speed, 1, MotorR);
     runMotor(speed + speed / 4, 1, MotorL);
-    lineFollowExecuted = true;
   } else if (L == HIGH && B == LOW && R == LOW) {
     runMotor(speed + speed / 2, 1, MotorR);
     runMotor(speed, 1, MotorL);
-    lineFollowExecuted = true;
   } else if (L == LOW && B == LOW && R == HIGH) {
     runMotor(speed, 1, MotorR);
     runMotor(speed + speed / 2, 1, MotorL);
-    lineFollowExecuted = true;
   }
-  if (RR == HIGH || LL == HIGH) {
-    stop();
-    isStopped = true;  // Set the stop flag to true
+}
+
+bool counterabitily = true;
+
+void lineFollow(int speed, int decisionNumber, bool LL, bool L , bool R, bool RR, bool B) {
+
+  if (decisionNumber==0){
+    normalFollow(speed, L, R, B);
+    if ((RR == HIGH || LL == HIGH) && counterability == true) {
+      counter++;
+      counterability = false;
+    }
+
+    if ((RR == LOW && LL == LOW) && counterability == false){
+      counterability = true;
+    }
   }
+
+  if (decisionNumber == 1) {
+    normalFollow(speed, L , R, B);
+    if (RR == HIGH || LL == HIGH) {
+      if (counterability == true) {
+        counter++;
+        counterability == false;
+      }
+     
+      stop();
+      delay(500);
+      makeTurn('R');
+    }
+
+    if ((RR == LOW && LL == LOW) && counterability == false){
+      counterability = true;
+    }
+  } 
+  
+  if (decisionNumber == 2) {
+    normalFollow(speed, L , R, B);
+    if (RR == HIGH || LL == HIGH) {
+      if (counterability == true) {
+        counter++;
+        counterability == flase;
+      }
+
+      stop();
+      delay(500);
+      makeTurn('L');
+    }
+
+    if ((RR == LOW && LL == LOW) && counterability == false){
+      counterability = true;
+    }
 }
 
 void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject) {
