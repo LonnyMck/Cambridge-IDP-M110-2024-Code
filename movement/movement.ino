@@ -183,12 +183,12 @@ void loop() {
       junctionReset();
     }
 
-    if (megacounter == 2 && counter == 0) {
+    if (megacounter == 2 && counter < 2) {
       normalFollow(200, L , R , B);
       if (B == HIGH) {
       countFollow(200 , LL , L , R , RR , B);
       }
-    
+    }
     if (megacounter == 2 && counter == 2) {
       makeTurn('R');
       junctionReset();
@@ -198,6 +198,7 @@ void loop() {
       if (B == HIGH) {
       countFollow(200 , LL , L , R , RR , B);
       }
+    }
     if (megacounter == 3 && counter == 1) {
       makeTurn('R');
       junctionReset();
@@ -207,19 +208,21 @@ void loop() {
       if (B == HIGH) {
       countFollow(200 , LL , L , R , RR , B);
       }
+    }
     if (megacounter == 4 && counter == 1) {
       makeTurn('R');
       junctionReset();
+    }
     if (megacounter == 5 && counter == 0) {
       normalFollow(150, L , R , B);
       if (B == HIGH) {
       countFollow(150 , LL , L , R , RR , B);
       //activate pickup mechanism here
       }
+    }
   }
 
   delay(100);
-  }
 }
 
 
@@ -227,7 +230,7 @@ void junctionReset() {
   counterability = true;
   Serial.println("counter on from isStarted");
   counter = 0;
-  Serial.println("Counter reset")
+  Serial.println("Counter reset");
   megacounter++;
   Serial.println("Megacounter update");
   Serial.println(megacounter);
@@ -247,7 +250,6 @@ void initiate(bool LL, bool L, bool R, bool RR) {
   }
 }
 
-
 void normalFollow(int speed, bool L , bool R,  bool B){
     if (L == HIGH && B == HIGH && R == HIGH) {
     goForward(speed);
@@ -256,25 +258,23 @@ void normalFollow(int speed, bool L , bool R,  bool B){
     goForward(speed);
     Serial.println("2222");
   } else if (L == HIGH && B == HIGH && R == LOW) {
-    runMotor(speed + speed / 4, 1, MotorR);
-    runMotor(speed, 1, MotorL);
+    runMotor(speed + 20, 1, MotorR);
+    runMotor(speed - 20, 1, MotorL);
     Serial.println("3333");
-
   } else if (L == LOW && B == HIGH && R == HIGH) {
-    runMotor(speed, 1, MotorR);
-    runMotor(speed + speed / 4, 1, MotorL);
+    runMotor(speed - 20, 1, MotorR);
+    runMotor(speed + 20, 1, MotorL);
     Serial.println("4444");
   } else if (L == HIGH && B == LOW && R == LOW) {
-    runMotor(speed + speed / 3, 1, MotorL);
-    runMotor(speed, 1, MotorR);
+    runMotor(speed - 50, 1, MotorL);
+    runMotor(speed + 50, 1, MotorR);
     Serial.println("5555");
   } else if (L == LOW && B == LOW && R == HIGH) {
-    runMotor(speed, 1, MotorL);
-    runMotor(speed + speed / 3, 1, MotorR);
+    runMotor(speed - 50, 1, MotorR);
+    runMotor(speed + 50, 1, MotorL);
     Serial.println("6666");
-  }
+  } 
 }
-
 
 
 void countFollow(int speed, bool LL, bool L , bool R, bool RR, bool B) {
