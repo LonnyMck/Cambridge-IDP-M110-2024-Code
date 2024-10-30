@@ -10,8 +10,8 @@ Test for motors in chassis
 DFRobot_VL53L0X sensor;
 
 int SENSOR_MAG = 6;
-//float BLOCK_NEARBY = 90;
-float BLOCK_CLOSE = 60; //Try messing about with this value, maybe reducing it
+float BLOCK_NEARBY = 150;
+float BLOCK_CLOSE = 55; //Try messing about with this value, maybe reducing it
 
 //LEDs are on pins 3, 4, and 5
 int LED_BLUE = 3;
@@ -86,7 +86,7 @@ void loop() {
   running = check_interrupt(); //Check for interrupt
   if (running) {  //No interrupt has been detected
 
-  runForwards(0);
+  runForwards(0,150);
 
   //checkMagnetic();
   CheckforBlock();
@@ -114,8 +114,8 @@ void loop() {
 //Declaring functions
 ///////////////////////////
 
-void runForwards(int time) {
-  speed = 100;  // Set the forward speed
+void runForwards(int time, double speed) {
+  //speed = 100;  // Set the forward speed
   runMotor(speed, 1, MotorR);
   runMotor(speed, 1, MotorL);
 
@@ -228,11 +228,12 @@ int CheckforBlock(){
     stopMotors();
     engageGrabber();
   }
-/*
-    if (sensor.getDistance() < BLOCK_NEARBY){
-      //reduce speed?
-  }
-*/
+
+  /*
+  else if (sensor.getDistance() < BLOCK_NEARBY and grabberEngaged == false){
+      runForwards(0,100);
+  }*/
+
   Serial.print("Distance: ");
   Serial.print(sensor.getDistance());
 
@@ -240,7 +241,7 @@ int CheckforBlock(){
 
 int checkMagnetic(){  //Takes three readings, check that this code works
 
-  for (int count = 0; count <= 5; count++){
+  for (int count = 0; count <= 10; count++){
      			isMagnetic = digitalRead(SENSOR_MAG);
           if (isMagnetic == true){
             break;
