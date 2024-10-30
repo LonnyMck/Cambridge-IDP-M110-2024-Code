@@ -11,7 +11,7 @@ DFRobot_VL53L0X sensor;
 
 int SENSOR_MAG = 6;
 //float BLOCK_NEARBY = 90;
-float BLOCK_CLOSE = 60; //Try messing about with this value, maybe reducing it
+float BLOCK_CLOSE = 65; //Try messing about with this value, maybe reducing it
 
 //LEDs are on pins 3, 4, and 5
 int LED_BLUE = 3;
