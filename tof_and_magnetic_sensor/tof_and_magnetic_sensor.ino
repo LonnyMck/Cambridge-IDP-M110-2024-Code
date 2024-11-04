@@ -5,12 +5,13 @@ DFRobot_VL53L0X sensor;
 
 //sensor mag consts
 float BLOCK_CLOSE = 75; //
-int SENSOR_MAG = 6;
+int SENSOR_MAG = 9;
 
-//LEDs are on pins 3, 4, and 5
-int LED_BLUE = 3;
-int LED_GREEN = 4;
-int LED_RED = 5;
+
+int LED_BLUE = 11;
+int LED_GREEN = 12;
+int LED_RED = 13;
+
 
 //after block is detected, switch var for if it is or isnt magnetic
 bool isMagnetic;
@@ -56,8 +57,10 @@ void loop() {
 void shineLedBlockType( bool isMagnetic ){
   if (isMagnetic){ 
     digitalWrite(LED_RED, HIGH ); 
+    digitalWrite(LED_GREEN, LOW ); 
   }else{
     digitalWrite( LED_GREEN, HIGH );
+    digitalWrite(LED_RED, LOW ); 
   }
 
 }
