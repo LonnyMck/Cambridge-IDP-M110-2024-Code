@@ -5,7 +5,7 @@ DFRobot_VL53L0X sensor;
 
 //sensor mag consts
 float BLOCK_CLOSE = 75; //
-int SENSOR_MAG = 6;
+int SENSOR_MAG = 9;
 
 //LEDs are on pins 3, 4, and 5
 int LED_BLUE = 3;

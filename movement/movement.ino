@@ -7,8 +7,8 @@ DFRobot_VL53L0X sensor;
 
 
 int SENSOR_MAG = 6;
-float BLOCK_NEARBY = 150;
-float BLOCK_CLOSE = 50;
+float BLOCK_NEARBY = 130;
+float BLOCK_CLOSE = 60;
 
 // Define sensor pins
 const int sensorPinLL = 8;
@@ -348,7 +348,7 @@ void setup() {
   //Laser rangefinder begins to work
   sensor.start();
 
-  
+
   pinMode(SENSOR_MAG, INPUT); //sets magnetic to input
 }
 
@@ -375,104 +375,103 @@ bool hasInitiated = false;
 
 void loop() {
 
-  CheckforBlock();
-  // // Check if the red button has been pressed
-  // if (digitalRead(redButtonPin) == HIGH) {
-  //   isStarted = false;
-  //   stop(); // Immediately stop all motors
-  // }
+  // Check if the red button has been pressed
+  if (digitalRead(redButtonPin) == HIGH) {
+    isStarted = false;
+    stop(); // Immediately stop all motors
+  }
 
-  // if (!isStarted) {
-  //   if (digitalRead(greenButtonPin) == HIGH) {
-  //     isStarted = true;
-  //     Serial.println(isStarted);
-  //     delay(100); // Debounce delay
-  //   } else {
-  //     return; // Do nothing until the green button is pressed
-  //   }
-  // }
+  if (!isStarted) {
+    if (digitalRead(greenButtonPin) == HIGH) {
+      isStarted = true;
+      Serial.println(isStarted);
+      delay(100); // Debounce delay
+    } else {
+      return; // Do nothing until the green button is pressed
+    }
+  }
 
-  // if (isStarted) {
+  if (isStarted) {
 
-  //   while (hasInitiated == false) {
-  //     bool LL = digitalRead(sensorPinLL);
-  //     bool L = digitalRead(sensorPinL);
-  //     bool R = digitalRead(sensorPinR);
-  //     bool RR = digitalRead(sensorPinRR);
-  //     bool B = digitalRead(sensorPinB);
-  //     goForward(200);  
-  //     Serial.println("Moving forward until first cross");
-  //     if (L == HIGH || R == HIGH) {
-  //       counter += 1;
-  //       Serial.println("First cross detected, counter updated");
-  //       Serial.println(counter);
-  //       counterability = false;
-  //       Serial.println("Counter off until line passed");
-  //       hasInitiated = true;
-  //       delay(100);
-  //       }
-  //   }
+    while (hasInitiated == false) {
+      bool LL = digitalRead(sensorPinLL);
+      bool L = digitalRead(sensorPinL);
+      bool R = digitalRead(sensorPinR);
+      bool RR = digitalRead(sensorPinRR);
+      bool B = digitalRead(sensorPinB);
+      goForward(200);  
+      Serial.println("Moving forward until first cross");
+      if (L == HIGH || R == HIGH) {
+        counter += 1;
+        Serial.println("First cross detected, counter updated");
+        Serial.println(counter);
+        counterability = false;
+        Serial.println("Counter off until line passed");
+        hasInitiated = true;
+        delay(100);
+        }
+    }
 
     
-  //   while (hasInitiated == true) {
-  //     flashWhenMoving( isStarted );
+    while (hasInitiated == true) {
+      flashWhenMoving( isStarted );
 
-  //     if (counter<3 && megacounter==0) {
-  //       //Serial.println("Crossed the first line");
-  //       countFollow(200);
-  //     }
+      if (counter<3 && megacounter==0) {
+        //Serial.println("Crossed the first line");
+        countFollow(200);
+      }
       
-  //     if (megacounter==0 && counter==3) {
-  //       stop();
-  //       delay(500);
-  //       makeTurn('L');
-  //       normalFollow(200);
-  //       delay(2000);
-  //       junctionReset();
-  //     }
+      if (megacounter==0 && counter==3) {
+        stop();
+        delay(500);
+        makeTurn('L');
+        normalFollow(200);
+        delay(2000);
+        junctionReset();
+      }
 
-  //     if (megacounter == 1 && counter<2) {
-  //       countFollow(200);
-  //     }
+      if (megacounter == 1 && counter<2) {
+        countFollow(200);
+      }
 
-  //     if (counter == 1 && megacounter == 1) {
-  //       makeTurn('R');
-  //       junctionReset();
-  //     }
+      if (counter == 1 && megacounter == 1) {
+        makeTurn('R');
+        junctionReset();
+      }
 
-  //     else if (megacounter == 2 && counter < 2) {
-  //       countFollow(200);
-  //     }
-  //     else if (megacounter == 2 && counter == 2) {
-  //       makeTurn('R');
-  //       junctionReset();
-  //     }
-  //     else if (megacounter == 3 && counter == 0) {
-  //       countFollow(200);
-  //     }
-  //     else if (megacounter == 3 && counter == 1) {
-  //       makeTurn('R');
-  //       junctionReset();
-  //     }
-  //     else if (megacounter == 4 && counter == 0) {
-  //       countFollow(200);
-  //     }
+      else if (megacounter == 2 && counter < 2) {
+        countFollow(200);
+      }
+      else if (megacounter == 2 && counter == 2) {
+        makeTurn('R');
+        junctionReset();
+      }
+      else if (megacounter == 3 && counter == 0) {
+        countFollow(200);
+      }
+      else if (megacounter == 3 && counter == 1) {
+        makeTurn('R');
+        junctionReset();
+      }
+      else if (megacounter == 4 && counter == 0) {
+        countFollow(200);
+      }
     
-  //     else if (megacounter == 4 && counter == 1) {
-  //       makeTurn('R');
-  //       junctionReset();
-  //     }
-  //     else if (megacounter == 5 && counter == 0) {
-  //       CheckforBlock();
-  //       countFollow(100);
-  //       //activate pickup mechanism here
-  //     }
+      else if (megacounter == 4 && counter == 1) {
+        makeTurn('R');
+        junctionReset();
+      }
+      else if (megacounter == 5 && counter == 0) {
+        CheckforBlock();
+        countFollow(100);
+        //activate pickup mechanism here
+      }
       
     
 
-  // }
-  // }
-  // delay(100);
+  }
+  }
+  delay(100);
 }
 
 
