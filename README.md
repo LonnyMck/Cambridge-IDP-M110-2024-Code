@@ -21,27 +21,29 @@ TO DO:
 - junction handling
 - pre programmed route
 
-D2: back line sensor
+D2: green button
 
-D3: servo
+D3: red button
 
-D4: green LED
+D4: line sensor BEHIND
 
-D5: red LED
+D5: line sensor LL
 
-D6: magnetic sensor
+D6: line sensor L
 
-D7: red button
+D7: line sensor R
 
-D8: green button
+D8: line sensor RR
 
-D9: blue LED
+D9: magnetic sensor
 
-D10: far left sensor pin
+D10: servo
 
-D11: left sensor pin
+D11: blue LED
 
-D12: right sensor pin
+D12: green LED
 
-D13: far right sensor pin
+D13: red LED
+
+Ad4 & Ad5: Time of Flight Sensor
 
