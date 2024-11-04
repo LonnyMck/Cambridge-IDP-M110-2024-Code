@@ -89,21 +89,21 @@ void loop() {
   if (running) {  //No interrupt has been detected
 
 
-  /*
+  
   runForwards(0,speed);
 
   //checkMagnetic();
   CheckforBlock();
-  */
-
-
   
+
+
+  /*
   engageGrabber();
   delay(5000);
   releaseGrabber();
-  
+  */
 
-  //runServo(145);  //Useful, can run this as the only code in the if(running) section to move the servo to certain positions. 0 is an open grabber, increasing the number closes it more and more.
+  //runServo(50);  //Useful, can run this as the only code in the if(running) section to move the servo to certain positions. 0 is an open grabber, increasing the number closes it more and more.
 
 
 
@@ -123,7 +123,7 @@ void loop() {
 void runForwards(int time, double speed) {
   //speed = 100;  // Set the forward speed
   runMotor(speed, 1, MotorR);
-  runMotor(speed, 1, MotorL);
+  runMotor(speed+30, 1, MotorL);
 
   if (time != 0) {
     delay(time);
