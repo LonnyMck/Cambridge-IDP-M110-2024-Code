@@ -9,14 +9,14 @@ Test for motors in chassis
 #include "DFRobot_VL53L0X.h"
 DFRobot_VL53L0X sensor;
 
-int SENSOR_MAG = 6;
+int SENSOR_MAG = 9;
 float BLOCK_NEARBY = 150;
 float BLOCK_CLOSE = 60; //Try messing about with this value, maybe reducing it
 
-//LEDs are on pins 3, 4, and 5
-int LED_BLUE = 3;
-int LED_GREEN = 4;
-int LED_RED = 5;
+//LEDs are on pins of this number
+int LED_BLUE = 11;
+int LED_GREEN = 12;
+int LED_RED = 13;
 
 //after block is detected, switch var for if it is or isnt magnetic
 bool isMagnetic;
@@ -73,7 +73,7 @@ void setup() {
 
   Serial.println("Motor Shield found.");
 
-  controlservo.attach(3); // attaches the servo on pin 3 to the servo object
+  controlservo.attach(10); // attaches the servo on pin 10 to the servo object
 
   releaseGrabber(); //Set the grabber to be released to start
 
@@ -89,21 +89,21 @@ void loop() {
   if (running) {  //No interrupt has been detected
 
 
-  
+  /*
   runForwards(0,speed);
 
   //checkMagnetic();
   CheckforBlock();
+  */
+
+
   
-
-
-  /*
   engageGrabber();
   delay(5000);
   releaseGrabber();
-  */
+  
 
-  //runServo(0);  //Useful, can run this as the only code in the if(running) section to move the servo to certain positions. 0 is an open grabber, increasing the number closes it more and more.
+  //runServo(145);  //Useful, can run this as the only code in the if(running) section to move the servo to certain positions. 0 is an open grabber, increasing the number closes it more and more.
 
 
 
@@ -180,7 +180,7 @@ void runMotor(int speed, bool direction, Adafruit_DCMotor *motorObject) {
   running = check_interrupt(); //Check for interrupt
   if (speed == 0) {
     motorObject->run(RELEASE);
-    // Serial.println("Stopping motor");
+    //Serial.println("Stopping motor");
   } else if (direction == 1) {
     motorObject->setSpeed(speed);
     motorObject->run(FORWARD);
@@ -210,7 +210,7 @@ int engageGrabber(){
 
   Serial.println("Engaging grabber");
   grabberEngaged = true;
-  runServo(100);
+  runServo(145);
   checkMagnetic();  //try it here
 
 }
@@ -221,7 +221,7 @@ int releaseGrabber(){
   Serial.println("Releasing grabber");
   grabberEngaged = false;
   isMagnetic = false;
-  runServo(0);
+  runServo(50);
   turnLedsOff();
 
 }
